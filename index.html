@@ -104,11 +104,58 @@ header .sp{flex:1}
 @keyframes pulse{0%,100%{opacity:.95}50%{opacity:.45}}
 .tgt{animation:pulse 1.1s infinite}
 @media (prefers-reduced-motion:reduce){.tgt,.rc.flash{animation:none}}
+[hidden]{display:none!important}
+#roomTag{font-size:11px;font-weight:800;background:var(--sea);color:#fff;border-radius:8px;padding:2px 6px;white-space:nowrap}
+#helpBg{z-index:30}
+#dlgBg{z-index:40;align-items:center}
+#dlgBg .sheet{border-radius:20px;margin:0 12px}
+/* title screen */
+.screen{position:fixed;inset:0;z-index:20;background:radial-gradient(circle at 50% 22%,color-mix(in srgb,var(--sea) 30%,var(--page)) 0,var(--page) 62%);display:none;overflow:auto;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.screen.show{display:flex}
+.tbox{margin:auto;width:100%;max-width:420px;text-align:center}
+.tisle{position:relative;width:230px;margin:0 auto}
+.tisle svg.map{width:100%;display:block}
+.tisle .hero{position:absolute;left:50%;top:50%;width:92px;height:92px;transform:translate(-50%,-58%)}
+.tisle .hero svg{width:100%;height:100%}
+.tmons{display:flex;justify-content:center;gap:0;margin:-4px 0 2px}
+.tmons svg{width:44px;height:44px}
+.ttl{margin:4px 0 2px;font-size:36px;font-weight:800;line-height:1.1}
+.ttl small{display:block;font-size:15px;color:var(--sub);letter-spacing:.35em;margin-bottom:2px}
+.tsub{color:var(--sub);font-size:13px;margin:4px 0 18px;line-height:1.6}
+.tbtn{display:block;width:100%;padding:13px 12px;border-radius:16px;background:var(--panel);border:2px solid var(--line);font-weight:800;font-size:17px;margin-bottom:10px}
+.tbtn span{display:block;font-size:12px;font-weight:500;color:var(--sub);margin-top:2px}
+.tbtn.pri{background:var(--btn);color:var(--btnInk);border-color:var(--btn)}
+.tbtn.pri span{color:inherit;opacity:.75}
+.tbtn:disabled{opacity:.45;cursor:default}
+.tlink{color:var(--sub);text-decoration:underline;font-size:14px;padding:8px}
+.card{background:var(--panel);border-radius:16px;padding:14px;border:1px solid var(--line);text-align:left;margin-bottom:10px}
+.card h3{margin:0 0 8px;font-size:15px}
+.field{display:block;width:100%;font:inherit;font-size:16px;padding:10px 12px;border-radius:12px;border:2px solid var(--line);background:var(--page);color:var(--ink);user-select:text;-webkit-user-select:text;margin:4px 0 10px}
+.field.code-in{text-transform:uppercase;letter-spacing:.2em;font-weight:800;text-align:center}
+.code{font-size:34px;font-weight:800;letter-spacing:.18em;text-align:center;margin:2px 0 6px}
+.url{font-size:11px;color:var(--sub);word-break:break-all;text-align:center;margin-bottom:8px;user-select:text;-webkit-user-select:text}
+.lob{list-style:none;padding:0;margin:8px 0}
+.lob li{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--soft);border-radius:10px;margin-bottom:6px;font-weight:700;font-size:14px}
+.lob li i{width:12px;height:12px;border-radius:4px;flex:none}
+.lob li.empty{color:var(--sub);font-weight:500}
+.lob li small{margin-left:auto;color:var(--sub);font-weight:500}
+.chk{display:flex;gap:8px;align-items:center;font-size:14px;font-weight:700;margin:6px 0 10px}
+.chk input{width:20px;height:20px}
+.tnote{color:#c3302a;font-weight:700;font-size:13px;min-height:18px;margin:6px 0}
+.tinfo{color:var(--sub);font-size:13px;margin:6px 0}
+.row2{display:flex;gap:8px}
+.row2>*{flex:1}
+.sbtn{padding:11px 8px;border-radius:12px;background:var(--soft);font-weight:800;font-size:14px}
+.sbtn.pri{background:var(--btn);color:var(--btnInk)}
+.sbtn:disabled{opacity:.4;cursor:default}
+.screen.compact .tisle,.screen.compact .tsub{display:none}
+.screen.compact .tmons{margin-top:4px}
+.or{color:var(--sub);font-size:12px;text-align:center;margin:4px 0 10px}
 </style>
 </head>
 <body>
 <div id="app">
-  <header><h1>🏝️ 開拓の島 モフルジム</h1><div class="sp"></div><button class="icon-btn" id="helpBtn" aria-label="遊び方">?</button><button class="icon-btn" id="newBtn" aria-label="新しいゲーム">↻</button></header>
+  <header><h1>🏝️ モフルジム</h1><span id="roomTag" hidden></span><div class="sp"></div><button class="icon-btn" id="helpBtn" aria-label="遊び方">?</button><button class="icon-btn" id="newBtn" aria-label="新しいゲーム">↻</button><button class="icon-btn" id="homeBtn" aria-label="タイトルに戻る">⌂</button></header>
   <div id="players"></div>
   <div id="msg"></div>
   <div id="boardWrap"><svg id="board" viewBox="-252 -218 504 436" preserveAspectRatio="xMidYMid meet"></svg></div>
@@ -165,7 +212,58 @@ header .sp{flex:1}
 
 <div class="sheet-bg" id="overBg"><div class="sheet" style="text-align:center">
   <div class="big" id="overIcon">🏆</div><h2 id="overTitle"></h2><p id="overText"></p>
-  <div class="row"><button class="pri" id="again">もう一度遊ぶ</button></div>
+  <div class="row"><button id="overHome">タイトルへ</button><button class="pri" id="again">もう一度遊ぶ</button></div>
+</div></div>
+
+<div class="sheet-bg" id="dlgBg"><div class="sheet" style="text-align:center">
+  <h2 id="dlgTitle"></h2><p id="dlgText"></p>
+  <div class="row" id="dlgBtns"></div>
+</div></div>
+
+<div class="screen show" id="title"><div class="tbox">
+  <div class="tisle"><svg class="map" id="tMap" viewBox="-130 -118 260 236" aria-hidden="true"></svg><div class="hero" id="tHero"></div></div>
+  <div class="tmons" id="tMons"></div>
+  <h1 class="ttl"><small>開拓の島</small>モフルジム</h1>
+  <p class="tsub">島に道とジムを建て、モフルを進化させて<br>ジムバトルで競おう。先に10点で勝ち！</p>
+
+  <div id="tMenu">
+    <button class="tbtn pri" id="modeCpu">🤖 CPUと対戦<span>あなた＋CPU 2人</span></button>
+    <button class="tbtn" id="modeOnline">👥 フレンド対戦（オンライン）<span>2〜3人・部屋コードで招待</span></button>
+    <button class="tlink" id="tHelp">遊び方・ルール</button>
+  </div>
+
+  <div id="tOnline" hidden>
+    <div class="card">
+      <label class="lbl" for="nick">ニックネーム</label>
+      <input class="field" id="nick" maxlength="10" autocomplete="nickname" placeholder="例：モフ太郎">
+      <h3>部屋を作る</h3>
+      <button class="tbtn pri" id="hostBtn">部屋を作ってフレンドを招待</button>
+      <div class="or">— または —</div>
+      <h3>部屋に参加する</h3>
+      <input class="field code-in" id="codeIn" maxlength="5" autocomplete="off" autocapitalize="characters" placeholder="部屋コード（5文字）">
+      <button class="tbtn" id="joinBtn">参加する</button>
+    </div>
+    <p class="tnote" id="tNote1"></p>
+    <button class="tlink" id="onlineBack">← 戻る</button>
+  </div>
+
+  <div id="tLobby" hidden>
+    <div class="card">
+      <div class="lbl" style="text-align:center">部屋コード</div>
+      <div class="code" id="lCode">-----</div>
+      <div class="url" id="lUrl"></div>
+      <div class="row2" id="lShare"><button class="sbtn" id="copyBtn">リンクをコピー</button><button class="sbtn" id="shareBtn">共有する</button></div>
+    </div>
+    <div class="card">
+      <h3>参加者 <small id="lCount" style="color:var(--sub);font-weight:500"></small></h3>
+      <ul class="lob" id="lList"></ul>
+      <label class="chk" id="lFillRow"><input type="checkbox" id="lFill" checked>空いた席をCPUで埋める（3人で遊ぶ）</label>
+      <p class="tinfo" id="lInfo"></p>
+      <button class="tbtn pri" id="startBtn" hidden>ゲーム開始</button>
+    </div>
+    <p class="tnote" id="tNote2"></p>
+    <button class="tlink" id="lobbyLeave">部屋を出る</button>
+  </div>
 </div></div>
 
 <script>
@@ -205,7 +303,14 @@ const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
 const die=()=>1+Math.floor(Math.random()*6);
-let G,flashRes=[];
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const COLOR_JA=['赤','青','橙'];
+/* G: 共有されるゲーム状態（JSON化してオンライン同期する）。以下はこの端末だけの表示状態 */
+let G=null;
+let MODE=null;   // 'cpu' | 'host' | 'guest'
+let ME=0;        // この端末で操作する席番号
+let uiMode=null,prevRes=null,battleOpen=null,battleWaiters=[],battleTimers=[],shownBattleId=0,overShown=false,pending=false;
+const isCpu=p=>G.players[p].type==='cpu';
 
 function makeBoard(){
   const coords=[];for(let q=-2;q<=2;q++)for(let r=-2;r<=2;r++)if(Math.abs(q+r)<=2)coords.push([q,r]);
@@ -237,16 +342,24 @@ function makeBoard(){
   return {hexes,V,E};
 }
 
-function newGame(){
-  const b=makeBoard();
-  const mk=(name,ai,i)=>({name,ai,color:COLORS[i],mon:null,badges:0,res:{wood:0,brick:0,sheep:0,wheat:0,ore:0}});
-  G={...b,players:[mk('あなた',false,0),mk('CPU 青',true,1),mk('CPU 橙',true,2)],
-     cur:0,phase:'setup',order:[0,1,2,2,1,0],setupIdx:0,lastSettle:null,mode:null,
-     dice:[1,1],lr:null,champ:null,lens:[0,0,0],busy:false,log:[],battleV:null};
-  ['tradeBg','overBg','evoBg','battleBg'].forEach(id=>$('#'+id).classList.remove('show'));
+/* seats: [{name,type:'local'|'remote'|'cpu'}] 席0から順番 */
+function newGame(seats){
+  const b=makeBoard(),idx=seats.map((_,i)=>i);
+  G={...b,gid:Date.now()+'-'+Math.random().toString(36).slice(2,6),
+     players:seats.map((s,i)=>({name:s.name,type:s.type,color:COLORS[i],mon:null,badges:0,disconnected:false,res:{wood:0,brick:0,sheep:0,wheat:0,ore:0}})),
+     cur:0,phase:'setup',setupStep:'settlement',order:[...idx,...idx.slice().reverse()],setupIdx:0,lastSettle:null,
+     dice:[1,1],lr:null,champ:null,lens:idx.map(()=>0),busy:false,log:[],battle:null,winner:null};
+  resetLocalUI();
   log('島が見つかった。最初のジムを置こう');
   stepSetup();
 }
+function resetLocalUI(){
+  uiMode=null;prevRes=null;overShown=false;shownBattleId=0;pending=false;
+  closeBattle(true);
+  ['tradeBg','overBg','evoBg','battleBg'].forEach(id=>$('#'+id).classList.remove('show'));
+}
+/* 状態を変えたら呼ぶ：ホストなら全員へ送信し、描画する */
+function update(){if(MODE==='host')Net.broadcastState();render();}
 
 /* ---------- rules ---------- */
 const total=p=>RES.reduce((s,r)=>s+p.res[r],0);
@@ -254,12 +367,12 @@ const afford=(p,c)=>Object.entries(COST[c]).every(([r,n])=>G.players[p].res[r]>=
 const pay=(p,c)=>Object.entries(COST[c]).forEach(([r,n])=>G.players[p].res[r]-=n);
 function vp(p){let s=0;G.V.forEach(v=>{if(v.owner===p)s+=v.city?2:1;});return s+(G.lr===p?2:0)+(G.champ===p?2:0);}
 function canSettle(v,p,setup){
-  const x=G.V[v];if(x.owner!==null)return false;
+  const x=G.V[v];if(!x||x.owner!==null)return false;
   if(x.adj.some(a=>G.V[a].owner!==null))return false;
   return setup||x.edges.some(e=>G.E[e].owner===p);
 }
 function canRoad(e,p){
-  const ed=G.E[e];if(ed.owner!==null)return false;
+  const ed=G.E[e];if(!ed||ed.owner!==null)return false;
   if(G.phase==='setup')return ed.a===G.lastSettle||ed.b===G.lastSettle;
   return [ed.a,ed.b].some(v=>{const x=G.V[v];
     if(x.owner===p)return true;
@@ -288,12 +401,8 @@ function updateLR(){
   G.lr=h;
 }
 function checkWin(){
-  for(let i=0;i<3;i++)if(vp(i)>=GOAL){
-    G.phase='over';G.mode=null;G.busy=false;render();
-    $('#overIcon').textContent=i===0?'🏆':'🌊';
-    $('#overTitle').textContent=i===0?'あなたの勝ち！':`${G.players[i].name}の勝ち`;
-    $('#overText').textContent=G.players.map((p,j)=>`${p.name} ${vp(j)}点`).join('／');
-    setTimeout(()=>$('#overBg').classList.add('show'),400);
+  for(let i=0;i<G.players.length;i++)if(vp(i)>=GOAL){
+    G.phase='over';G.winner=i;G.busy=false;update();
     return true;
   }
   return false;
@@ -308,52 +417,69 @@ function winProb(a,v){
   let w=0;for(let i=1;i<=6;i++)for(let j=1;j<=6;j++)if(i+ba>j+bd)w++;
   return w/36;
 }
-function sideHTML(p,m,roll,b,tot,role){
-  const pl=G.players[p];
-  return `<div class="nm">${pl.name}<br><small style="font-weight:500;color:var(--sub)">${role}</small></div>${monSVG(m)}<div class="mn">${monName(m)}${m?'（'+TYPE_JA[m]+'）':''}</div>
-  <div class="dv" data-roll="${roll}">${DIE[roll]}</div><div class="bn">${b.map(x=>x[0]+'+'+x[1]).join(' ')||'ボーナスなし'}</div><div class="tt" data-tot>${tot}</div>`;
+/* バトルを判定して状態に反映し、演出用の結果を G.battle に残す */
+function battle(a,v){
+  const d=G.V[v].owner,A=G.players[a],D=G.players[d],city=G.V[v].city;
+  const am=A.mon,dm=D.mon,ra=die(),rd=die();
+  const ba=bonuses(am,dm,false),bd=bonuses(dm,am,city);
+  const ta=ra+bsum(ba),td=rd+bsum(bd);
+  const win=ta>td?a:d,lose=win===a?d:a,lostMon=G.players[lose].mon;
+  const W_=G.players[win],L_=G.players[lose];W_.badges++;L_.mon=null;
+  const pool=RES.flatMap(r=>Array(L_.res[r]).fill(r));let stolen=null;
+  if(pool.length){stolen=pool[Math.floor(Math.random()*pool.length)];L_.res[stolen]--;W_.res[stolen]++;}
+  log(`⚔️ ${W_.name}がバトルに勝利：バッジ${W_.badges}個目${stolen?'、'+L_.name+'から'+ICON[stolen]+'を奪った':''}`);
+  const champTxt=updateChamp();
+  const tie=ta===td?'同点なのでジムの勝ち。':'';
+  const stealTxt=stolen?`${L_.name}から${ICON[stolen]}${JA[stolen]}を1枚奪った。`:`${L_.name}は資源を持っていなかった。`;
+  const loseTxt=lostMon?`${L_.name}の${monName(lostMon)}はモフルに戻った。`:'';
+  G.battle={id:(G.battle?G.battle.id:0)+1,a,d,v,city,am,dm,ra,rd,ba,bd,ta,td,win,
+    text:`${tie}${W_.name}の勝ち！ バッジ獲得（${W_.badges}個）。${stealTxt}${loseTxt}${champTxt}`};
 }
-function doBattle(a,v){
-  return new Promise(resolve=>{
-    const d=G.V[v].owner,A=G.players[a],D=G.players[d],city=G.V[v].city;
-    const am=A.mon,dm=D.mon,ra=die(),rd=die();
-    const ba=bonuses(am,dm,false),bd=bonuses(dm,am,city);
-    const ta=ra+bsum(ba),td=rd+bsum(bd);
-    const win=ta>td?a:d,lose=win===a?d:a,lostMon=G.players[lose].mon;
-    G.battleV=v;render();
-    $('#bTitle').textContent=`${city?'都市':''}ジムバトル`;
-    const bA=$('#bA'),bD=$('#bD');
-    bA.style.setProperty('--c',COLORS[a]);bD.style.setProperty('--c',COLORS[d]);
-    bA.className='side';bD.className='side';
-    bA.innerHTML=sideHTML(a,am,ra,ba,'?','挑戦者');bD.innerHTML=sideHTML(d,dm,rd,bd,'?','ジム');
-    $('#bResult').textContent='サイコロを振っています…';
-    const ok=$('#bOk');ok.disabled=true;
-    $('#battleBg').classList.add('show');
-    const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let n=0;const dvA=bA.querySelector('.dv'),dvD=bD.querySelector('.dv');
-    const spin=setInterval(()=>{dvA.textContent=DIE[die()];dvD.textContent=DIE[die()];if(++n>=8)finish();},reduce?0:90);
-    let done=false;
-    function finish(){
-      if(done)return;done=true;clearInterval(spin);
-      dvA.textContent=DIE[ra];dvD.textContent=DIE[rd];
-      bA.querySelector('[data-tot]').textContent=ta;bD.querySelector('[data-tot]').textContent=td;
-      (win===a?bA:bD).classList.add('win');
-      const W_=G.players[win],L_=G.players[lose];W_.badges++;L_.mon=null;
-      const pool=RES.flatMap(r=>Array(L_.res[r]).fill(r));let stolen=null;
-      if(pool.length){stolen=pool[Math.floor(Math.random()*pool.length)];L_.res[stolen]--;W_.res[stolen]++;if(win===0)flashRes=[stolen];}
-      log(`⚔️ ${W_.name}がバトルに勝利：バッジ${W_.badges}個目${stolen?'、'+L_.name+'から'+ICON[stolen]+'を奪った':''}`);
-      const champTxt=updateChamp();
-      const tie=ta===td?'同点なのでジムの勝ち。':'';
-      const stealTxt=stolen?`${L_.name}から${ICON[stolen]}${JA[stolen]}を1枚奪った。`:`${L_.name}は資源を持っていなかった。`;
-      const loseTxt=lostMon?`${L_.name}の${monName(lostMon)}はモフルに戻った。`:'';
-      $('#bResult').textContent=`${tie}${W_.name}の勝ち！ バッジ獲得（${W_.badges}個）。${stealTxt}${loseTxt}${champTxt}`;
-      ok.disabled=false;
-      const involved=a===0||d===0;
-      let t=involved?null:setTimeout(close,2600);
-      ok.onclick=close;
-      function close(){if(t)clearTimeout(t);ok.onclick=null;$('#battleBg').classList.remove('show');G.battleV=null;render();resolve();}
-    }
-  });
+function sideHTML(p,m,roll,b,role){
+  const pl=G.players[p];
+  return `<div class="nm">${esc(pl.name)}<br><small style="font-weight:500;color:var(--sub)">${role}</small></div>${monSVG(m)}<div class="mn">${monName(m)}${m?'（'+TYPE_JA[m]+'）':''}</div>
+  <div class="dv">${DIE[roll]}</div><div class="bn">${b.map(x=>x[0]+'+'+x[1]).join(' ')||'ボーナスなし'}</div><div class="tt" data-tot>?</div>`;
+}
+function closeBattle(silent){
+  battleTimers.forEach(t=>{clearTimeout(t);clearInterval(t);});battleTimers=[];
+  $('#battleBg').classList.remove('show');$('#bOk').onclick=null;
+  battleOpen=null;const w=battleWaiters;battleWaiters=[];w.forEach(f=>f());
+  if(!silent)render();
+}
+/* G.battle の演出（全員の端末で表示） */
+function showBattle(b){
+  closeBattle(true);
+  shownBattleId=b.id;battleOpen=b;
+  const {a,d}=b;
+  $('#bTitle').textContent=`${b.city?'都市':''}ジムバトル`;
+  const bA=$('#bA'),bD=$('#bD');
+  bA.style.setProperty('--c',G.players[a].color);bD.style.setProperty('--c',G.players[d].color);
+  bA.className='side';bD.className='side';
+  bA.innerHTML=sideHTML(a,b.am,b.ra,b.ba,'挑戦者');bD.innerHTML=sideHTML(d,b.dm,b.rd,b.bd,'ジム');
+  $('#bResult').textContent='サイコロを振っています…';
+  const ok=$('#bOk');ok.disabled=true;
+  $('#battleBg').classList.add('show');
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let n=0;const dvA=bA.querySelector('.dv'),dvD=bD.querySelector('.dv');
+  const spin=setInterval(()=>{dvA.textContent=DIE[die()];dvD.textContent=DIE[die()];if(++n>=8)finish();},reduce?0:90);
+  battleTimers.push(spin);
+  let done=false;
+  function finish(){
+    if(done)return;done=true;clearInterval(spin);
+    dvA.textContent=DIE[b.ra];dvD.textContent=DIE[b.rd];
+    bA.querySelector('[data-tot]').textContent=b.ta;bD.querySelector('[data-tot]').textContent=b.td;
+    (b.win===a?bA:bD).classList.add('win');
+    $('#bResult').textContent=b.text;
+    ok.disabled=false;
+    const involved=(a===ME||d===ME)&&!isCpu(ME);
+    if(!involved)battleTimers.push(setTimeout(()=>closeBattle(),2600));
+    ok.onclick=()=>closeBattle();
+  }
+}
+/* CPU の手番でバトル演出の終わりを待つ（オンラインでは他の人を待たせないよう一定時間） */
+function battleWait(){
+  if(MODE!=='cpu')return sleep(3000);
+  return new Promise(r=>{if(!battleOpen)r();else battleWaiters.push(r);});
 }
 
 function updateChamp(){
@@ -368,7 +494,6 @@ function placeSettlement(v,p){G.V[v].owner=p;G.lastSettle=v;updateLR();}
 function placeRoad(e,p){G.E[e].owner=p;updateLR();}
 function giveInitial(v,p){
   const got=[];G.V[v].hexes.forEach(h=>{const t=G.hexes[h].type;if(t!=='desert'){G.players[p].res[t]++;got.push(t);}});
-  if(p===0)flashRes=got;
   log(`${G.players[p].name}：初期資源 ${got.map(t=>ICON[t]).join('')||'なし'}`);
 }
 function evolve(p,r){
@@ -380,9 +505,9 @@ function roll(){
   G.dice=[a,b];const p=G.cur,pl=G.players[p];
   if(s===7){
     log(`${pl.name}が🎲7！`);
-    G.players.forEach((q,i)=>{const n=total(q);if(n>7){const d=Math.floor(n/2);
+    G.players.forEach(q=>{const n=total(q);if(n>7){const d=Math.floor(n/2);
       for(let k=0;k<d;k++){const pool=RES.flatMap(r=>Array(q.res[r]).fill(r));q.res[pool[Math.floor(Math.random()*pool.length)]]--;}
-      log(i===0?`手札が多いので${d}枚捨てた`:`${q.name}は${d}枚捨てた`);}});
+      log(`${q.name}は手札が多いので${d}枚捨てた`);}});
     if(!pl.mon){log(`${pl.name}のモフルは進化前なのでバトルなし`);G.phase='main';}
     else if(!enemyGyms(p).length){log('挑戦できるジムがない');G.phase='main';}
     else G.phase='battle';
@@ -391,29 +516,93 @@ function roll(){
     G.hexes.forEach(h=>{if(h.num!==s)return;
       h.verts.forEach(v=>{const x=G.V[v];if(x.owner!==null){const n=x.city?2:1;G.players[x.owner].res[h.type]+=n;gains[x.owner][h.type]=(gains[x.owner][h.type]||0)+n;}});});
     const parts=gains.map((g,i)=>{const t=Object.entries(g).map(([r,n])=>ICON[r]+(n>1?'×'+n:'')).join('');return t?`${G.players[i].name}${t}`:''}).filter(Boolean);
-    flashRes=Object.keys(gains[0]);
     log(`🎲${s}：${parts.join('、')||'収穫なし'}`);
     G.phase='main';
   }
 }
 
+/* 人間プレイヤー（この端末 or リモート）の操作。ホスト／CPU対戦の端末だけが実行し、ここで検証する */
+function act(p,a){
+  if(!G||!a||G.cur!==p||G.busy||G.phase==='over'||isCpu(p))return false;
+  const pl=G.players[p],main=G.phase==='main';
+  const vOk=Number.isInteger(a.v)&&a.v>=0&&a.v<G.V.length;
+  const eOk=Number.isInteger(a.e)&&a.e>=0&&a.e<G.E.length;
+  switch(a.t){
+    case 'settle':
+      if(!vOk)return false;
+      if(G.phase==='setup'){
+        if(G.setupStep!=='settlement'||!canSettle(a.v,p,true))return false;
+        placeSettlement(a.v,p);if(G.setupIdx>=G.players.length)giveInitial(a.v,p);else log(`${pl.name}がジムを置いた`);
+        G.setupStep='road';update();return true;
+      }
+      if(!main||!afford(p,'settlement')||!canSettle(a.v,p,false))return false;
+      pay(p,'settlement');placeSettlement(a.v,p);log(`${pl.name}がジムを建てた（+1点）`);if(!checkWin())update();return true;
+    case 'road':
+      if(!eOk)return false;
+      if(G.phase==='setup'){
+        if(G.setupStep!=='road'||!canRoad(a.e,p))return false;
+        placeRoad(a.e,p);G.setupIdx++;G.setupStep='settlement';stepSetup();return true;
+      }
+      if(!main||!afford(p,'road')||!canRoad(a.e,p))return false;
+      pay(p,'road');placeRoad(a.e,p);log(`${pl.name}が道を建てた`);if(!checkWin())update();return true;
+    case 'city':
+      if(!vOk||!main||G.V[a.v].owner!==p||G.V[a.v].city||!afford(p,'city'))return false;
+      pay(p,'city');G.V[a.v].city=true;log(`${pl.name}が都市を建てた（+1点、守り+1）`);if(!checkWin())update();return true;
+    case 'roll':
+      if(G.phase!=='roll')return false;
+      roll();update();return true;
+    case 'battle':{
+      if(!vOk||G.phase!=='battle')return false;
+      const o=G.V[a.v].owner;if(o===null||o===p)return false;
+      battle(p,a.v);G.phase='main';if(!checkWin())update();return true;}
+    case 'skip':
+      if(G.phase!=='battle')return false;
+      log(`${pl.name}は挑戦を見送った`);G.phase='main';update();return true;
+    case 'end':
+      if(!main)return false;
+      endTurn();return true;
+    case 'trade':
+      if(!main||!RES.includes(a.give)||!RES.includes(a.get)||a.give===a.get||pl.res[a.give]<4)return false;
+      pl.res[a.give]-=4;pl.res[a.get]++;log(`${pl.name}が銀行で${ICON[a.give]}×4→${ICON[a.get]}に交換`);update();return true;
+    case 'evolve':
+      if(!main||!RES.includes(a.r)||!canEvolve(p)||pl.res[a.r]<3)return false;
+      evolve(p,a.r);update();return true;
+  }
+  return false;
+}
+/* この端末からの操作：ゲストはホストへ送り、それ以外はその場で実行 */
+function doAction(a){
+  if(MODE==='guest'){pending=true;Net.sendAction(a);render();return;}
+  act(ME,a);
+}
+
 /* ---------- flow ---------- */
 async function stepSetup(){
-  const g=G;
-  if(G.setupIdx>=6){G.phase='roll';G.cur=0;G.mode=null;G.lastSettle=null;log('準備完了。あなたから始めます');render();return;}
+  const g=G,n=G.players.length;
+  if(G.setupIdx>=G.order.length){
+    G.phase='roll';G.cur=0;G.lastSettle=null;G.busy=false;log(`準備完了。${G.players[0].name}から始めます`);
+    if(isCpu(0))aiTurn(0);else update();return;
+  }
   const p=G.order[G.setupIdx];G.cur=p;
-  if(!G.players[p].ai){G.mode='settlement';G.busy=false;render();return;}
-  G.busy=true;G.mode=null;render();await sleep(650);if(G!==g)return;
-  const spots=settleSpots(p,true);
-  const v=spots.reduce((b,x)=>vScore(x,p)>vScore(b,p)?x:b,spots[0]);
-  placeSettlement(v,p);if(G.setupIdx>=3)giveInitial(v,p);else log(`${G.players[p].name}がジムを置いた`);
-  render();await sleep(450);if(G!==g)return;
+  if(!isCpu(p)){G.busy=false;update();return;}
+  G.busy=true;update();await sleep(650);if(G!==g)return;
+  if(G.setupStep==='settlement'){
+    const spots=settleSpots(p,true);
+    const v=spots.reduce((b,x)=>vScore(x,p)>vScore(b,p)?x:b,spots[0]);
+    placeSettlement(v,p);if(G.setupIdx>=n)giveInitial(v,p);else log(`${G.players[p].name}がジムを置いた`);
+    G.setupStep='road';update();await sleep(450);if(G!==g)return;
+  }
   const rs=roadSpots(p);placeRoad(rs.reduce((b,e)=>roadScore(e,p)>roadScore(b,p)?e:b,rs[0]),p);
-  G.setupIdx++;stepSetup();
+  G.setupIdx++;G.setupStep='settlement';stepSetup();
 }
 function endTurn(){
-  G.mode=null;G.cur=(G.cur+1)%3;
-  if(G.players[G.cur].ai)aiTurn(G.cur);else{G.phase='roll';render();}
+  G.cur=(G.cur+1)%G.players.length;G.phase='roll';G.busy=false;
+  if(isCpu(G.cur))aiTurn(G.cur);else update();
+}
+/* 途中から CPU に交代した席でも続きから動けるようにする */
+function resumeCpu(p){
+  if(G.phase==='over'||G.cur!==p||G.busy)return;
+  if(G.phase==='setup')stepSetup();else aiTurn(p);
 }
 
 /* ---------- AI ---------- */
@@ -463,51 +652,40 @@ function aiAct(p){
   return false;
 }
 async function aiTurn(p){
-  const g=G;G.busy=true;G.phase='roll';render();await sleep(700);if(G!==g)return;
-  roll();render();await sleep(800);if(G!==g)return;
+  const g=G;G.busy=true;update();await sleep(700);if(G!==g||G.cur!==p)return;
+  if(G.phase==='roll'){roll();update();await sleep(800);if(G!==g)return;}
   if(G.phase==='battle'){
-    const leaderScore=i=>vp(i)+(i===0?.5:0);
+    const leaderScore=i=>vp(i)+(isCpu(i)?0:.5);
     let best=null,bs=-1;
     enemyGyms(p).forEach(v=>{const s=winProb(p,v)+leaderScore(G.V[v].owner)*.02+Math.random()*.01;if(s>bs){bs=s;best=v;}});
-    if(best!==null&&winProb(p,best)>=.4){await doBattle(p,best);if(G!==g)return;if(checkWin())return;}
-    else log(`${G.players[p].name}は挑戦を見送った`);
-    G.phase='main';render();await sleep(500);if(G!==g)return;
+    if(best!==null&&winProb(p,best)>=.4){
+      battle(p,best);G.phase='main';if(checkWin())return;update();
+      await battleWait();if(G!==g)return;
+    }else{log(`${G.players[p].name}は挑戦を見送った`);G.phase='main';}
+    update();await sleep(500);if(G!==g)return;
   }
   for(let i=0;i<14;i++){
     if(!aiAct(p))break;
-    render();if(checkWin())return;
+    if(checkWin())return;update();
     await sleep(700);if(G!==g)return;
   }
   G.busy=false;endTurn();
 }
 
 /* ---------- human input ---------- */
-const myTurn=()=>G.cur===0&&!G.busy&&G.phase!=='over';
-async function onVertex(v){
+const myTurn=()=>!!G&&G.cur===ME&&!G.busy&&!pending&&G.phase!=='over'&&!isCpu(ME);
+function onVertex(v){
   if(!myTurn())return;
-  if(G.phase==='setup'&&G.mode==='settlement'&&canSettle(v,0,true)){
-    placeSettlement(v,0);if(G.setupIdx>=3)giveInitial(v,0);else log('ジムを置いた');
-    G.mode='road';render();return;
-  }
-  if(G.phase==='battle'){
-    const o=G.V[v].owner;if(o===null||o===0)return;
-    G.busy=true;G.mode=null;await doBattle(0,v);G.busy=false;
-    G.phase='main';render();checkWin();return;
-  }
+  if(G.phase==='setup'){if(G.setupStep==='settlement'&&canSettle(v,ME,true))doAction({t:'settle',v});return;}
+  if(G.phase==='battle'){const o=G.V[v].owner;if(o===null||o===ME)return;doAction({t:'battle',v});return;}
   if(G.phase!=='main')return;
-  if(G.mode==='settlement'&&afford(0,'settlement')&&canSettle(v,0,false)){
-    pay(0,'settlement');placeSettlement(v,0);log('ジムを建てた（+1点）');G.mode=null;render();checkWin();
-  }else if(G.mode==='city'&&G.V[v].owner===0&&!G.V[v].city&&afford(0,'city')){
-    pay(0,'city');G.V[v].city=true;log('都市を建てた（+1点、守り+1）');G.mode=null;render();checkWin();
-  }
+  if(uiMode==='settlement'&&afford(ME,'settlement')&&canSettle(v,ME,false)){uiMode=null;doAction({t:'settle',v});}
+  else if(uiMode==='city'&&G.V[v].owner===ME&&!G.V[v].city&&afford(ME,'city')){uiMode=null;doAction({t:'city',v});}
 }
 function onEdge(e){
   if(!myTurn())return;
-  if(G.phase==='setup'&&G.mode==='road'&&canRoad(e,0)){placeRoad(e,0);G.setupIdx++;G.mode=null;stepSetup();return;}
-  if(G.phase==='main'&&G.mode==='road'&&afford(0,'road')&&canRoad(e,0)){
-    pay(0,'road');placeRoad(e,0);log('道を建てた');
-    G.mode=afford(0,'road')&&roadSpots(0).length?'road':null;render();checkWin();
-  }
+  if(G.phase==='setup'){if(G.setupStep==='road'&&canRoad(e,ME))doAction({t:'road',e});return;}
+  if(G.phase==='main'&&uiMode==='road'&&afford(ME,'road')&&canRoad(e,ME))doAction({t:'road',e});
 }
 $('#board').addEventListener('click',ev=>{
   const t=ev.target.closest('[data-v],[data-e]');if(!t)return;
@@ -517,22 +695,23 @@ document.querySelectorAll('.ab').forEach(b=>b.addEventListener('click',()=>{
   const a=b.dataset.act;if(!myTurn()||G.phase!=='main')return;
   if(a==='trade'){openTrade();return;}
   if(a==='evolve'){openEvo();return;}
-  G.mode=G.mode===a?null:a;render();
+  uiMode=uiMode===a?null:a;render();
 }));
-$('#mymon').addEventListener('click',()=>{if(myTurn()&&G.phase==='main'&&canEvolve(0))openEvo();});
+$('#mymon').addEventListener('click',()=>{if(myTurn()&&G.phase==='main'&&canEvolve(ME))openEvo();});
 $('#main').addEventListener('click',()=>{
-  if(G.phase==='over'){newGame();return;}
+  if(!G)return;
+  if(G.phase==='over'){playAgain();return;}
   if(!myTurn())return;
-  if(G.phase==='roll'){roll();G.mode=G.phase==='battle'?'battle':null;render();}
-  else if(G.phase==='battle'){log('挑戦を見送った');G.phase='main';G.mode=null;render();}
-  else if(G.phase==='main'){G.mode=null;endTurn();}
+  if(G.phase==='roll')doAction({t:'roll'});
+  else if(G.phase==='battle')doAction({t:'skip'});
+  else if(G.phase==='main'){uiMode=null;doAction({t:'end'});}
 });
 
 /* ---------- trade ---------- */
 let tGive=null,tGet=null;
 function openTrade(){tGive=null;tGet=null;renderTrade();$('#tradeBg').classList.add('show');}
 function renderTrade(){
-  const me=G.players[0];
+  const me=G.players[ME];
   $('#give').innerHTML=RES.map(r=>`<button data-r="${r}" class="${tGive===r?'sel':''}" ${me.res[r]<4?'disabled':''}><span class="ic">${ICON[r]}</span>${me.res[r]}枚</button>`).join('');
   $('#get').innerHTML=RES.map(r=>`<button data-r="${r}" class="${tGet===r?'sel':''}" ${r===tGive?'disabled':''}><span class="ic">${ICON[r]}</span>${JA[r]}</button>`).join('');
   $('#tOk').disabled=!(tGive&&tGet&&tGive!==tGet);
@@ -541,39 +720,95 @@ $('#give').addEventListener('click',e=>{const b=e.target.closest('button');if(!b
 $('#get').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;tGet=b.dataset.r;renderTrade();});
 $('#tCancel').onclick=()=>$('#tradeBg').classList.remove('show');
 $('#tOk').onclick=()=>{
-  const me=G.players[0];if(!tGive||!tGet||me.res[tGive]<4)return;
-  me.res[tGive]-=4;me.res[tGet]++;flashRes=[tGet];log(`銀行で${ICON[tGive]}×4→${ICON[tGet]}に交換`);
-  $('#tradeBg').classList.remove('show');render();
+  if(!myTurn()||!tGive||!tGet||G.players[ME].res[tGive]<4)return;
+  $('#tradeBg').classList.remove('show');doAction({t:'trade',give:tGive,get:tGet});
 };
 
 /* ---------- evolve ---------- */
 let eSel=null;
 function openEvo(){eSel=null;renderEvo();$('#evoBg').classList.add('show');}
 function renderEvo(){
-  const me=G.players[0];
+  const me=G.players[ME];
   const weak=Object.fromEntries(Object.entries(BEATS).map(([k,v])=>[v,k]));
   $('#evoList').innerHTML=RES.map(r=>`<button data-r="${r}" class="${eSel===r?'sel':''}" ${me.res[r]<3?'disabled':''}>${monSVG(r)}<div><b>${monName(r)}</b><small>${TYPE_JA[r]}タイプ ・ ${ICON[r]}×3（${me.res[r]}枚）<br>強い：${TYPE_JA[BEATS[r]]}／弱い：${TYPE_JA[weak[r]]}</small></div></button>`).join('');
   $('#eOk').disabled=!eSel;
 }
 $('#evoList').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;eSel=b.dataset.r;renderEvo();});
 $('#eCancel').onclick=()=>$('#evoBg').classList.remove('show');
-$('#eOk').onclick=()=>{if(!eSel||!canEvolve(0)||G.players[0].res[eSel]<3)return;evolve(0,eSel);$('#evoBg').classList.remove('show');render();};
+$('#eOk').onclick=()=>{if(!myTurn()||!eSel||!canEvolve(ME)||G.players[ME].res[eSel]<3)return;$('#evoBg').classList.remove('show');doAction({t:'evolve',r:eSel});};
+
+/* ---------- dialog ---------- */
+function dialog(title,text,buttons){
+  $('#dlgTitle').textContent=title;$('#dlgText').textContent=text;
+  const box=$('#dlgBtns');box.innerHTML='';
+  buttons.forEach(b=>{const el=document.createElement('button');el.textContent=b.label;if(b.pri)el.className='pri';
+    el.onclick=()=>{$('#dlgBg').classList.remove('show');b.fn&&b.fn();};box.appendChild(el);});
+  $('#dlgBg').classList.add('show');
+}
+
+/* ---------- modes / title ---------- */
+function startCpu(){
+  MODE='cpu';ME=0;hideTitle();
+  newGame([{name:'あなた',type:'local'},{name:'CPU 青',type:'cpu'},{name:'CPU 橙',type:'cpu'}]);
+}
+function playAgain(){
+  if(MODE==='cpu')startCpu();
+  else if(MODE==='host')Net.restart();
+}
+function goTitle(){
+  if(MODE==='host'||MODE==='guest')Net.leave();
+  MODE=null;G=null;pending=false;
+  closeBattle(true);
+  ['tradeBg','overBg','evoBg','battleBg','dlgBg','helpBg'].forEach(id=>$('#'+id).classList.remove('show'));
+  showTitle('menu');
+}
+function hideTitle(){$('#title').classList.remove('show');}
+function showTitle(panel){
+  $('#title').classList.add('show');$('#title').classList.toggle('compact',panel!=='menu');
+  $('#tMenu').hidden=panel!=='menu';$('#tOnline').hidden=panel!=='online';$('#tLobby').hidden=panel!=='lobby';
+  if(panel!=='lobby')$('#tNote2').textContent='';
+}
+function drawTitle(){
+  let s='';const r=34;
+  const R=118,sea=[...Array(6)].map((_,i)=>`${R*Math.cos(Math.PI/3*i)},${R*Math.sin(Math.PI/3*i)}`).join(' ');
+  s+=`<polygon points="${sea}" fill="var(--sea)" stroke="#f3e2b8" stroke-width="3" stroke-linejoin="round"/>`;
+  const cells=[[0,0,'desert'],[1,0,'wood'],[0,1,'wheat'],[-1,1,'sheep'],[-1,0,'brick'],[0,-1,'ore'],[1,-1,'wheat']];
+  cells.forEach(([q,rr,t])=>{const x=r*SQ3*(q+rr/2),y=r*1.5*rr;
+    const pts=[...Array(6)].map((_,i)=>{const a=Math.PI/180*(60*i-30);return `${x+r*Math.cos(a)},${y+r*Math.sin(a)}`;}).join(' ');
+    s+=`<polygon points="${pts}" fill="${TILE[t]}" stroke="#f3e2b8" stroke-width="3" stroke-linejoin="round"/>`;
+    if(t!=='desert')s+=`<text x="${x}" y="${y}" font-size="16" text-anchor="middle" dominant-baseline="central">${ICON[t]}</text>`;});
+  s+=house(r*SQ3*.5+r*SQ3*.5,-r,COLORS[0],false)+house(-r*SQ3,r*1.1,COLORS[1],true)+house(r*.9,r*2.1,COLORS[2],false);
+  $('#tMap').innerHTML=s;
+  $('#tHero').innerHTML=monSVG(null);
+  $('#tMons').innerHTML=['wood','brick','sheep','wheat','ore'].map(monSVG).join('');
+}
 
 $('#helpBtn').onclick=()=>$('#helpBg').classList.add('show');
+$('#tHelp').onclick=()=>$('#helpBg').classList.add('show');
 $('#hClose').onclick=()=>$('#helpBg').classList.remove('show');
-$('#newBtn').onclick=()=>{if(confirm('新しいゲームを始めますか？'))newGame();};
-$('#again').onclick=newGame;
+$('#newBtn').onclick=()=>{
+  if(MODE==='cpu'){if(confirm('新しいゲームを始めますか？'))startCpu();}
+  else if(MODE==='host'){if(confirm('同じメンバーで新しいゲームを始めますか？'))Net.restart();}
+};
+$('#homeBtn').onclick=()=>{
+  const msg=MODE==='host'?'タイトルに戻りますか？\n（ホストが抜けるとオンライン対戦は終了します）':MODE==='guest'?'タイトルに戻りますか？\n（この対戦から抜けます）':'タイトルに戻りますか？\n（今のゲームは終了します）';
+  if(confirm(msg))goTitle();
+};
+$('#again').onclick=playAgain;
+$('#overHome').onclick=goTitle;
 ['tradeBg','evoBg','helpBg'].forEach(id=>{const bg=$('#'+id);bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('show');});});
 
 /* ---------- render ---------- */
 function status(){
   const p=G.players[G.cur];
   if(G.phase==='over')return 'ゲーム終了';
-  if(p.ai)return `${p.name}の番…`;
-  if(G.phase==='setup')return G.mode==='settlement'?`ジムを置く交差点をタップ（${G.setupIdx<3?'1':'2'}つ目）`:'つながる道を置く辺をタップ';
+  if(p.disconnected)return `${p.name}の接続が切れました…`;
+  if(G.cur!==ME||isCpu(ME))return `${p.name}の番…`;
+  if(G.busy||pending)return '通信中…';
+  if(G.phase==='setup')return G.setupStep==='settlement'?`あなたの番：ジムを置く交差点をタップ（${G.setupIdx<G.players.length?'1':'2'}つ目）`:'あなたの番：つながる道を置く辺をタップ';
   if(G.phase==='roll')return 'あなたの番：サイコロを振ろう';
   if(G.phase==='battle')return '⚔️ 挑戦するジムをタップ（％は勝率）';
-  return {road:'道を置く辺をタップ',settlement:'ジムを置く交差点をタップ',city:'都市にするジムをタップ'}[G.mode]||`建設・進化・交換するか、ターン終了（${vp(0)}/${GOAL}点）`;
+  return {road:'道を置く辺をタップ',settlement:'ジムを置く交差点をタップ',city:'都市にするジムをタップ'}[uiMode]||`建設・進化・交換するか、ターン終了（${vp(ME)}/${GOAL}点）`;
 }
 function house(x,y,c,city){
   const d=city?`M${x-12},${y+8}V${y-2}L${x-7},${y-8}L${x-2},${y-2}H${x+12}V${y+8}Z`:`M${x-8},${y+7}V${y-2}L${x},${y-10}L${x+8},${y-2}V${y+7}Z`;
@@ -598,50 +833,299 @@ function renderBoard(){
     s+=`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="rgba(0,0,0,.35)" stroke-width="10" stroke-linecap="round"/>`;
     s+=`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${COLORS[e.owner]}" stroke-width="6.5" stroke-linecap="round"/>`;});
   G.V.forEach(v=>{if(v.owner!==null)s+=house(v.x,v.y,COLORS[v.owner],v.city);});
-  if(G.battleV!==null){const v=G.V[G.battleV];s+=`<circle cx="${v.x}" cy="${v.y}" r="17" fill="none" stroke="#f2b640" stroke-width="4"/>`;}
+  if(battleOpen){const v=G.V[battleOpen.v];s+=`<circle cx="${v.x}" cy="${v.y}" r="17" fill="none" stroke="#f2b640" stroke-width="4"/>`;}
   if(myTurn()){
-    const setup=G.phase==='setup';
-    if(G.mode==='road'&&(setup||G.phase==='main'))roadSpots(0).forEach(id=>{const e=G.E[id],a=G.V[e.a],b=G.V[e.b];
+    const setup=G.phase==='setup',main=G.phase==='main';
+    const roadMode=setup?G.setupStep==='road':main&&uiMode==='road';
+    const settleMode=setup?G.setupStep==='settlement':main&&uiMode==='settlement';
+    const cityMode=main&&uiMode==='city';
+    const myC=COLORS[ME];
+    if(roadMode)roadSpots(ME).forEach(id=>{const e=G.E[id],a=G.V[e.a],b=G.V[e.b];
       const mx=(a.x+b.x)/2,my=(a.y+b.y)/2,sx=a.x+(b.x-a.x)*.15,sy=a.y+(b.y-a.y)*.15,ex=b.x-(b.x-a.x)*.15,ey=b.y-(b.y-a.y)*.15;
-      s+=`<g data-e="${id}" style="cursor:pointer"><line class="tgt" x1="${sx}" y1="${sy}" x2="${ex}" y2="${ey}" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-dasharray="4 5"/><line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="transparent" stroke-width="22"/><circle cx="${mx}" cy="${my}" r="4" fill="${COLORS[0]}" stroke="#fff" stroke-width="1.5"/></g>`;});
-    if(G.phase==='battle')enemyGyms(0).forEach(id=>{const v=G.V[id],pc=Math.round(winProb(0,id)*100);
+      s+=`<g data-e="${id}" style="cursor:pointer"><line class="tgt" x1="${sx}" y1="${sy}" x2="${ex}" y2="${ey}" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-dasharray="4 5"/><line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="transparent" stroke-width="22"/><circle cx="${mx}" cy="${my}" r="4" fill="${myC}" stroke="#fff" stroke-width="1.5"/></g>`;});
+    if(G.phase==='battle')enemyGyms(ME).forEach(id=>{const v=G.V[id],pc=Math.round(winProb(ME,id)*100);
       s+=`<g data-v="${id}" style="cursor:pointer"><circle cx="${v.x}" cy="${v.y}" r="20" fill="transparent"/><circle class="tgt" cx="${v.x}" cy="${v.y}" r="15" fill="none" stroke="#fff" stroke-width="3"/>
       <rect x="${v.x-15}" y="${v.y-31}" width="30" height="14" rx="7" fill="#22302f"/><text x="${v.x}" y="${v.y-24}" font-size="10" font-weight="800" fill="#fff" text-anchor="middle" dominant-baseline="central">${pc}%</text></g>`;});
     let vs=[];
-    if(G.mode==='settlement'&&(setup||G.phase==='main'))vs=settleSpots(0,setup);
-    if(G.mode==='city'&&G.phase==='main')vs=citySpots(0);
+    if(settleMode)vs=settleSpots(ME,setup);
+    if(cityMode)vs=citySpots(ME);
     vs.forEach(id=>{const v=G.V[id];
-      s+=`<g data-v="${id}" style="cursor:pointer"><circle cx="${v.x}" cy="${v.y}" r="18" fill="transparent"/><circle class="tgt" cx="${v.x}" cy="${v.y}" r="${G.mode==='city'?14:8}" fill="${G.mode==='city'?'none':'#fff'}" stroke="${G.mode==='city'?'#fff':COLORS[0]}" stroke-width="3"/></g>`;});
+      s+=`<g data-v="${id}" style="cursor:pointer"><circle cx="${v.x}" cy="${v.y}" r="18" fill="transparent"/><circle class="tgt" cx="${v.x}" cy="${v.y}" r="${cityMode?14:8}" fill="${cityMode?'none':'#fff'}" stroke="${cityMode?'#fff':myC}" stroke-width="3"/></g>`;});
   }
   $('#board').innerHTML=s;
 }
 function render(){
-  renderBoard();
-  $('#players').innerHTML=G.players.map((p,i)=>`<div class="pl ${i===G.cur&&G.phase!=='over'?'turn':''}" style="--c:${p.color}">${monSVG(p.mon)}<div class="tx"><div class="pn"><i></i>${p.name}</div><div class="ps"><b>★${vp(i)}</b><span>🃏${total(p)}</span><span>🏅${p.badges}</span>${G.lr===i?'<em>最長</em>':''}${G.champ===i?'<em>王者</em>':''}</div></div></div>`).join('');
-  $('#msg').textContent=status();
-  $('#msg').style.background=G.players[G.cur].ai&&G.phase!=='over'?COLORS[G.cur]:'var(--sea)';
-  $('#dice').innerHTML=`${DIE[G.dice[0]]}${DIE[G.dice[1]]}<small>${G.dice[0]+G.dice[1]}</small>`;
-  const me=G.players[0];
-  $('#mymon').innerHTML=`${monSVG(me.mon)}<span>${me.mon?TYPE_JA[me.mon]+'タイプ':'進化前'}</span>`;
-  $('#res').innerHTML=RES.map(r=>`<div class="rc ${flashRes.includes(r)?'flash':''}"><span class="ic">${ICON[r]}</span><b>${me.res[r]}</b>${JA[r]}</div>`).join('');
-  flashRes=[];
-  $('#log').innerHTML=G.log.slice(0,2).map(l=>`<div>${l}</div>`).join('');
+  if(!G)return;
+  const online=MODE==='host'||MODE==='guest';
+  if(G.battle&&G.battle.id>shownBattleId)showBattle(G.battle);
+  const me=G.players[ME];
   const can=myTurn()&&G.phase==='main';
-  const ok={road:can&&afford(0,'road')&&roadSpots(0).length>0,
-    settlement:can&&afford(0,'settlement')&&settleSpots(0,false).length>0,
-    city:can&&afford(0,'city')&&citySpots(0).length>0,
-    evolve:can&&canEvolve(0),
+  const ok={road:can&&afford(ME,'road')&&roadSpots(ME).length>0,
+    settlement:can&&afford(ME,'settlement')&&settleSpots(ME,false).length>0,
+    city:can&&afford(ME,'city')&&citySpots(ME).length>0,
+    evolve:can&&canEvolve(ME),
     trade:can&&RES.some(r=>me.res[r]>=4)};
-  document.querySelectorAll('.ab').forEach(b=>{const a=b.dataset.act;b.disabled=!ok[a];b.classList.toggle('on',G.mode===a&&G.phase==='main');});
+  if(uiMode&&!ok[uiMode])uiMode=null;
+  renderBoard();
+  $('#players').style.gridTemplateColumns=`repeat(${G.players.length},1fr)`;
+  $('#players').innerHTML=G.players.map((p,i)=>`<div class="pl ${i===G.cur&&G.phase!=='over'?'turn':''}" style="--c:${p.color}">${monSVG(p.mon)}<div class="tx"><div class="pn"><i></i>${esc(p.name)}${p.disconnected?' ⚠️':''}</div><div class="ps"><b>★${vp(i)}</b><span>🃏${total(p)}</span><span>🏅${p.badges}</span>${online&&i===ME?'<em style="background:var(--ink);color:var(--panel)">自分</em>':''}${G.lr===i?'<em>最長</em>':''}${G.champ===i?'<em>王者</em>':''}</div></div></div>`).join('');
+  $('#msg').textContent=status();
+  $('#msg').style.background=G.cur!==ME&&G.phase!=='over'?G.players[G.cur].color:'var(--sea)';
+  $('#dice').innerHTML=`${DIE[G.dice[0]]}${DIE[G.dice[1]]}<small>${G.dice[0]+G.dice[1]}</small>`;
+  $('#mymon').innerHTML=`${monSVG(me.mon)}<span>${me.mon?TYPE_JA[me.mon]+'タイプ':'進化前'}</span>`;
+  const flash=prevRes?RES.filter(r=>me.res[r]>prevRes[r]):[];prevRes={...me.res};
+  $('#res').innerHTML=RES.map(r=>`<div class="rc ${flash.includes(r)?'flash':''}"><span class="ic">${ICON[r]}</span><b>${me.res[r]}</b>${JA[r]}</div>`).join('');
+  $('#log').innerHTML=G.log.slice(0,2).map(l=>`<div>${esc(l)}</div>`).join('');
+  document.querySelectorAll('.ab').forEach(b=>{const a=b.dataset.act;b.disabled=!ok[a];b.classList.toggle('on',uiMode===a&&G.phase==='main');});
+  $('#newBtn').hidden=MODE==='guest';
+  $('#roomTag').hidden=!online;if(online)$('#roomTag').textContent='部屋 '+Net.code();
   const m=$('#main');
-  if(G.phase==='over'){m.textContent='もう一度遊ぶ';m.disabled=false;return;}
-  if(!myTurn()){m.textContent=G.players[G.cur].ai?'相手の番です':'バトル中…';m.disabled=true;}
+  if(G.phase==='over'){
+    m.textContent=MODE==='guest'?'ホストの再開を待っています':'もう一度遊ぶ';m.disabled=MODE==='guest';
+    if(!overShown&&!battleOpen){
+      overShown=true;const w=G.winner;
+      $('#overIcon').textContent=w===ME?'🏆':'🌊';
+      $('#overTitle').textContent=w===ME?'あなたの勝ち！':`${G.players[w].name}の勝ち`;
+      $('#overText').textContent=G.players.map((p,j)=>`${p.name} ${vp(j)}点`).join('／');
+      $('#again').hidden=MODE==='guest';
+      setTimeout(()=>{if(G&&G.phase==='over')$('#overBg').classList.add('show');},400);
+    }
+    return;
+  }
+  if(!myTurn()){m.textContent=G.cur!==ME?`${G.players[G.cur].name}の番です`:'お待ちください…';m.disabled=true;}
   else if(G.phase==='setup'){m.textContent='初期配置中';m.disabled=true;}
   else if(G.phase==='roll'){m.textContent='🎲 サイコロを振る';m.disabled=false;}
   else if(G.phase==='battle'){m.textContent='挑戦しない';m.disabled=false;}
   else{m.textContent='ターン終了';m.disabled=false;}
 }
-newGame();
+
+/* ---------- online (PeerJS / WebRTC, host-authoritative) ----------
+   ホスト: ゲーム状態を持ち、ゲストの操作(act)を検証して、変更のたびに全体状態を送る。
+   ゲスト: 操作をホストへ送り、受け取った状態を描画するだけ。 */
+const Net=(()=>{
+  const SRC='https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js';
+  const PFX='mofuru-gym-',ALPHA='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',MAX=3,TIMEOUT=30000;
+  let peer=null,code='',guests=[],hostConn=null,myName='',hb=null,lastHost=0,joinTimer=null,alive=false;
+  const genCode=()=>[...Array(5)].map(()=>ALPHA[Math.floor(Math.random()*ALPHA.length)]).join('');
+  const cleanName=s=>String(s||'').replace(/[<>&"'`\\\n\r\t]/g,'').trim().slice(0,10)||'ゲスト';
+  const roomUrl=()=>location.origin+location.pathname+'?room='+code;
+  function load(){
+    if(window.Peer)return Promise.resolve();
+    return new Promise((res,rej)=>{const s=document.createElement('script');s.src=SRC;s.onload=()=>res();s.onerror=()=>rej(new Error('PeerJSの読み込みに失敗しました'));document.head.appendChild(s);});
+  }
+  const send=(c,m)=>{try{if(c&&c.open)c.send(m);}catch(e){}};
+  const note=t=>{$('#tNote1').textContent=t;$('#tNote2').textContent=t;};
+  function errText(e){
+    const t=e&&e.type;
+    if(t==='peer-unavailable')return '部屋が見つかりません。コードを確かめてください。';
+    if(t==='network'||t==='server-error'||t==='socket-error'||t==='socket-closed')return '接続サーバーにつながりません。通信環境を確認してください。';
+    if(t==='browser-incompatible')return 'このブラウザはオンライン対戦に対応していません。';
+    return 'オンライン接続でエラーが起きました（'+(t||(e&&e.message)||'不明')+'）';
+  }
+  function stopAll(){
+    clearInterval(hb);hb=null;clearTimeout(joinTimer);joinTimer=null;alive=false;
+    const p=peer;peer=null;guests=[];hostConn=null;
+    if(p)setTimeout(()=>{try{p.destroy();}catch(e){}},300);
+  }
+
+  /* ===== host ===== */
+  function lobbyMsg(i){return {t:'lobby',players:guestsAll().map(x=>x.name),fill:$('#lFill').checked,you:i};}
+  const guestsAll=()=>[{name:myName,conn:null},...guests];
+  function renderLobby(names,fill,you,isHost){
+    const n=names.length,rows=[];
+    for(let i=0;i<MAX;i++){
+      if(i<n)rows.push(`<li><i style="background:${COLORS[i]}"></i>${esc(names[i])}<small>${i===0?'ホスト':''}${i===you?'（あなた）':''}</small></li>`);
+      else rows.push(`<li class="empty"><i style="background:${COLORS[i]};opacity:.4"></i>${fill?'🤖 CPU が入ります':'空き'}</li>`);
+    }
+    $('#lList').innerHTML=rows.join('');
+    $('#lCount').textContent=`${n}/${MAX}人`;
+    $('#lFill').checked=fill;$('#lFill').disabled=!isHost;$('#lFillRow').style.opacity=isHost?1:.6;
+    $('#startBtn').hidden=!isHost;$('#startBtn').disabled=n<2;
+    $('#lInfo').textContent=isHost?(n<2?'フレンドにコードかリンクを送って、参加を待ちましょう。':'そろったら「ゲーム開始」を押してください。'):'ホストがゲームを始めるのを待っています…';
+  }
+  function hostLobbyUpdate(){
+    if(MODE!=='host'||G)return;
+    guests.forEach((x,i)=>send(x.conn,lobbyMsg(i+1)));
+    renderLobby(guestsAll().map(x=>x.name),$('#lFill').checked,0,true);
+  }
+  async function host(name){
+    myName=cleanName(name);note('接続中…');
+    try{await load();}catch(e){note(e.message);return;}
+    MODE='host';ME=0;G=null;guests=[];
+    open(0);
+    function open(attempt){
+      code=genCode();
+      const p=peer=new Peer(PFX+code);
+      p.on('open',()=>{if(peer!==p)return;alive=true;note('');showLobby(true);hostLobbyUpdate();startHeartbeat();});
+      p.on('connection',c=>{if(peer===p)onGuest(c);});
+      p.on('disconnected',()=>{if(peer===p&&alive)try{p.reconnect();}catch(e){}});
+      p.on('error',e=>{
+        if(peer!==p)return;
+        if(e.type==='unavailable-id'&&attempt<5){peer=null;try{p.destroy();}catch(_){ }open(attempt+1);return;}
+        if(e.type==='peer-unavailable')return;
+        if(!alive){note(errText(e));stopAll();MODE=null;showTitle('online');}
+        else console.warn('peer error',e);
+      });
+    }
+  }
+  function onGuest(c){
+    const g={conn:c,name:'',seat:null,seen:Date.now(),gone:false};
+    c.on('data',d=>{g.seen=Date.now();onHostData(g,d);});
+    c.on('close',()=>guestGone(g));
+    c.on('error',()=>guestGone(g));
+  }
+  function onHostData(g,d){
+    if(!d||typeof d!=='object')return;
+    if(d.t==='hello'){
+      if(G){send(g.conn,{t:'reject',reason:'このゲームはもう始まっています。'});setTimeout(()=>g.conn.close(),500);return;}
+      if(guests.length+1>=MAX){send(g.conn,{t:'reject',reason:'部屋が満員です。'});setTimeout(()=>g.conn.close(),500);return;}
+      g.name=cleanName(d.name);guests.push(g);
+      send(g.conn,{t:'welcome',code});hostLobbyUpdate();return;
+    }
+    if(d.t==='bye'){guestGone(g);return;}
+    if(d.t==='act'&&G&&g.seat!==null&&!g.gone){
+      let ok=false;try{ok=act(g.seat,d.a);}catch(e){console.error(e);}
+      if(!ok)send(g.conn,{t:'state',G});
+    }
+  }
+  function guestGone(g){
+    if(g.gone)return;g.gone=true;
+    try{g.conn.close();}catch(e){}
+    if(MODE!=='host')return;
+    if(!G){guests=guests.filter(x=>x!==g);hostLobbyUpdate();return;}
+    const s=g.seat;if(s===null||!G.players[s]||G.players[s].type!=='remote')return;
+    const pl=G.players[s];pl.disconnected=true;log(`${pl.name}の接続が切れました`);update();
+    dcQueue.push(s);if(dcQueue.length===1)askDc();
+  }
+  const dcQueue=[];
+  function askDc(){
+    if(!dcQueue.length||MODE!=='host'||!G)return;
+    const s=dcQueue[0],pl=G.players[s];
+    dialog('接続が切れました',`${pl.name}の接続が切れました。CPUに交代して続けるか、ゲームを終了してください。`,[
+      {label:'ゲームを終了',fn:()=>{dcQueue.length=0;broadcast({t:'end',reason:'ホストがゲームを終了しました。'});goTitle();}},
+      {label:'CPUに交代',pri:true,fn:()=>{
+        dcQueue.shift();
+        if(G&&G.players[s]){const p=G.players[s];p.type='cpu';p.disconnected=false;p.name=p.name+'🤖';log(`${p.name}（CPU）が代わりに参加`);update();resumeCpu(s);}
+        askDc();}}
+    ]);
+  }
+  function broadcast(m){guests.forEach(x=>{if(!x.gone)send(x.conn,m);});}
+  function startHeartbeat(){
+    clearInterval(hb);
+    hb=setInterval(()=>{
+      if(MODE==='host'){broadcast({t:'ping'});const now=Date.now();guests.slice().forEach(g=>{if(!g.gone&&now-g.seen>TIMEOUT)guestGone(g);});}
+      else if(MODE==='guest'){send(hostConn,{t:'pong'});if(Date.now()-lastHost>TIMEOUT)hostLost();}
+    },4000);
+  }
+  function start(){
+    if(MODE!=='host'||G)return;
+    const all=guestsAll();if(all.length<2)return;
+    const seats=all.map((x,i)=>({name:x.name,type:i===0?'local':'remote'}));
+    if($('#lFill').checked)while(seats.length<MAX)seats.push({name:'CPU '+COLOR_JA[seats.length],type:'cpu'});
+    guests.forEach((g,i)=>{g.seat=i+1;send(g.conn,{t:'start',seat:i+1});});
+    hideTitle();newGame(seats);
+  }
+  function restart(){
+    if(MODE!=='host'||!G)return;
+    const seats=G.players.map(p=>({name:p.name,type:p.disconnected?'cpu':p.type}));
+    newGame(seats);
+  }
+
+  /* ===== guest ===== */
+  async function join(name,c){
+    myName=cleanName(name);code=c;note('接続中…');
+    try{await load();}catch(e){note(e.message);return;}
+    MODE='guest';G=null;
+    const p=peer=new Peer();
+    joinTimer=setTimeout(()=>{if(peer===p&&!alive){note('部屋に接続できませんでした。コードと通信環境を確かめてください。');stopAll();MODE=null;showTitle('online');}},15000);
+    p.on('open',()=>{
+      if(peer!==p)return;
+      const hc=hostConn=p.connect(PFX+code,{reliable:true});
+      hc.on('open',()=>send(hc,{t:'hello',name:myName}));
+      hc.on('data',d=>{lastHost=Date.now();onGuestData(d);});
+      hc.on('close',()=>{if(hostConn===hc)hostLost();});
+      hc.on('error',()=>{if(hostConn===hc)hostLost();});
+    });
+    p.on('error',e=>{
+      if(peer!==p)return;
+      if(!alive){note(errText(e));stopAll();MODE=null;showTitle('online');}
+      else console.warn('peer error',e);
+    });
+  }
+  function onGuestData(d){
+    if(!d||typeof d!=='object'||MODE!=='guest')return;
+    switch(d.t){
+      case 'welcome':alive=true;clearTimeout(joinTimer);note('');showLobby(false);startHeartbeat();break;
+      case 'lobby':if(!G)renderLobby(d.players,d.fill,d.you,false);break;
+      case 'reject':note(d.reason||'参加できませんでした。');stopAll();MODE=null;showTitle('online');break;
+      case 'start':ME=d.seat;break;
+      case 'state':{
+        const ng=d.G;if(!ng||!ng.players)return;
+        const fresh=!G||G.gid!==ng.gid;
+        G=ng;if(fresh){resetLocalUI();hideTitle();}
+        pending=false;render();break;}
+      case 'end':{const r=d.reason||'ゲームが終了しました。';stopAll();MODE=null;goTitle();dialog('対戦終了',r,[{label:'OK',pri:true}]);break;}
+      case 'ping':send(hostConn,{t:'pong'});break;
+    }
+  }
+  function hostLost(){
+    if(MODE!=='guest')return;
+    stopAll();MODE=null;goTitle();
+    dialog('接続が切れました','ホストとの接続が切れました。タイトルに戻ります。',[{label:'OK',pri:true}]);
+  }
+
+  function showLobby(isHost){
+    showTitle('lobby');
+    $('#lCode').textContent=code;$('#lUrl').textContent=roomUrl();
+    $('#lShare').hidden=!isHost;$('#lUrl').hidden=!isHost;
+    $('#shareBtn').hidden=!navigator.share;
+    if(!isHost)renderLobby([],false,-1,false);
+  }
+  function leave(){
+    if(MODE==='host')broadcast({t:'end',reason:'ホストが部屋を閉じました。'});
+    else if(MODE==='guest')send(hostConn,{t:'bye'});
+    dcQueue.length=0;stopAll();
+  }
+  return {host,join,start,restart,leave,code:()=>code,url:roomUrl,
+    broadcastState:()=>broadcast({t:'state',G}),
+    sendAction:a=>send(hostConn,{t:'act',a}),
+    lobbyChanged:hostLobbyUpdate};
+})();
+
+/* ---------- title screen wiring ---------- */
+const store={get:k=>{try{return localStorage.getItem(k)||'';}catch(e){return '';}},set:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}}};
+const readNick=()=>{const n=$('#nick').value.trim();if(n)store.set('mofuru-nick',n);return n||'ゲスト';};
+$('#modeCpu').onclick=startCpu;
+$('#modeOnline').onclick=()=>{$('#tNote1').textContent='';showTitle('online');};
+$('#onlineBack').onclick=()=>showTitle('menu');
+$('#hostBtn').onclick=()=>Net.host(readNick());
+$('#joinBtn').onclick=()=>{
+  const c=$('#codeIn').value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(c.length!==5){$('#tNote1').textContent='5文字の部屋コードを入力してください。';return;}
+  Net.join(readNick(),c);
+};
+$('#codeIn').addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'');});
+$('#lFill').onchange=()=>Net.lobbyChanged();
+$('#startBtn').onclick=()=>Net.start();
+$('#lobbyLeave').onclick=()=>{goTitle();};
+$('#copyBtn').onclick=async()=>{
+  const u=Net.url();
+  try{await navigator.clipboard.writeText(u);$('#copyBtn').textContent='コピーしました';setTimeout(()=>$('#copyBtn').textContent='リンクをコピー',1600);}
+  catch(e){prompt('このリンクを送ってください',u);}
+};
+$('#shareBtn').onclick=()=>{navigator.share({title:'開拓の島 モフルジム',text:`モフルジムで対戦しよう！ 部屋コード：${Net.code()}`,url:Net.url()}).catch(()=>{});};
+window.addEventListener('pagehide',()=>{if(MODE==='host'||MODE==='guest')Net.leave();});
+
+drawTitle();
+$('#nick').value=store.get('mofuru-nick');
+(()=>{
+  const room=new URLSearchParams(location.search).get('room');
+  if(room){
+    $('#codeIn').value=room.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,5);
+    showTitle('online');
+    $('#tNote1').textContent='招待リンクから開きました。ニックネームを入れて「参加する」を押してください。';
+  }else showTitle('menu');
+})();
 </script>
 </body>
 </html>
