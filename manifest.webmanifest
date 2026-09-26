@@ -1,0 +1,17 @@
+{
+  "name": "開拓の島 モフルジム",
+  "short_name": "モフルジム",
+  "description": "島を開拓し、モフルを進化させてジムバトル",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#dcebe8",
+  "theme_color": "#2b7b8c",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
