@@ -4,7 +4,8 @@ import { battle } from './battle';
 import { ICON, isResource } from './constants';
 import { defaultRng } from './random';
 import {
-  advanceTurn, afford, canEvolve, canRoad, canSettle, checkWin, evolve, giveInitial, isCpu, log, pay, placeRoad, placeSettlement, roll,
+  advanceTurn, afford, canEvolve, canRoad, canSettle, cancelOffer, checkWin, doDiscard, evolve, giveInitial, isCpu, log, makeOffer, pay,
+  placeRoad, placeSettlement, respondOffer, roll, type CpuDiscard,
 } from './rules';
 import type { Action, GameState, Rng } from './types';
 
@@ -17,8 +18,18 @@ import type { Action, GameState, Rng } from './types';
  */
 export type ActResult = false | 'update' | 'setup' | 'turn';
 
-export function applyAction(g: GameState | null, p: number, a: Action | null | undefined, rng: Rng = defaultRng): ActResult {
-  if (!g || !a || g.cur !== p || g.busy || g.phase === 'over' || isCpu(g, p)) return false;
+/**
+ * cpuDiscard: サイコロで7が出たときに CPU が捨てる処理（cpu/ai.ts の cpuDiscard）。
+ * 省略すると CPU も discard フェーズで待つ
+ */
+export function applyAction(g: GameState | null, p: number, a: Action | null | undefined, rng: Rng = defaultRng, cpuDiscard?: CpuDiscard): ActResult {
+  if (!g || !a || g.phase === 'over' || !g.players[p] || isCpu(g, p)) return false;
+  /* 自分の番でなくてもできる操作：7のときに捨てる、交換の提案に答える */
+  if (a.t === 'discard') return doDiscard(g, p, a.r) ? 'update' : false;
+  if (a.t === 'respond') return respondOffer(g, p, !!a.ok) ? 'update' : false;
+  if (g.cur !== p || g.busy) return false;
+  if (a.t === 'cancelOffer') { if (!g.offer || g.offer.from !== p) return false; cancelOffer(g); return 'update'; }
+  if (g.offer) return false;
   const pl = g.players[p], main = g.phase === 'main';
   const raw = a as { v?: unknown; e?: unknown };
   const vOk = Number.isInteger(raw.v) && (raw.v as number) >= 0 && (raw.v as number) < g.V.length;
@@ -47,7 +58,7 @@ export function applyAction(g: GameState | null, p: number, a: Action | null | u
       pay(g, p, 'city'); g.V[v].city = true; log(g, `${pl.name}が都市を建てた（+1点、守り+1）`); checkWin(g); return 'update';
     case 'roll':
       if (g.phase !== 'roll') return false;
-      roll(g, rng); return 'update';
+      roll(g, rng, cpuDiscard); return 'update';
     case 'battle': {
       if (!vOk || g.phase !== 'battle') return false;
       const o = g.V[v].owner; if (o === null || o === p) return false;
@@ -62,6 +73,9 @@ export function applyAction(g: GameState | null, p: number, a: Action | null | u
     case 'trade':
       if (!main || !isResource(a.give) || !isResource(a.get) || a.give === a.get || pl.res[a.give] < 4) return false;
       pl.res[a.give] -= 4; pl.res[a.get]++; log(g, `${pl.name}が銀行で${ICON[a.give]}×4→${ICON[a.get]}に交換`); return 'update';
+    case 'offer':
+      if (!main || !makeOffer(g, p, a.to, a.give, a.want)) return false;
+      return 'update';
     case 'evolve':
       if (!main || !isResource(a.r) || !canEvolve(g, p) || pl.res[a.r] < 3) return false;
       evolve(g, p, a.r); return 'update';

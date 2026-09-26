@@ -1,36 +1,62 @@
 /* タイトル画面・モード選択・ヘッダーのボタン */
-import { newGame } from '../app/session';
+import { newGame, resumeCpuGame } from '../app/session';
+import { SAVE_CPU, loadCpuSave, loadGuestSave, loadHostSave } from '../app/save';
+import { setCpuOrder, setSpeed, settings } from '../app/settings';
 import { app, isOnline } from '../app/state';
 import { COLORS, ICON, SQ3, TILE } from '../game/constants';
+import { cpuSeq } from '../game/rules';
 import type { TileType } from '../game/types';
 import { Net } from '../net/online';
 import { store } from '../storage';
 import { house, monSVG } from './art';
-import { closeBattle } from './battle';
 import { $ } from './dom';
+import { resetLocalUI } from './render';
 
-export type TitlePanel = 'menu' | 'online' | 'lobby';
+export type TitlePanel = 'menu' | 'cpu' | 'online' | 'lobby';
 
+/** 新しい CPU 対戦を始める（席0=あなた（赤）、席1,2=CPU。手番はタイトルで選んだ順） */
 export function startCpu(): void {
+  store.del(SAVE_CPU);
   app.mode = 'cpu'; app.me = 0; hideTitle();
-  newGame([{ name: 'あなた', type: 'local' }, { name: 'CPU 青', type: 'cpu' }, { name: 'CPU 橙', type: 'cpu' }]);
+  newGame([{ name: 'あなた', type: 'local' }, { name: 'CPU 青', type: 'cpu' }, { name: 'CPU 橙', type: 'cpu' }], cpuSeq(settings.cpuOrder));
+}
+/** 保存しておいた CPU 対戦を、同じ盤面・同じ状態から再開する */
+function resumeCpu(): void {
+  const s = loadCpuSave();
+  if (!s) { store.del(SAVE_CPU); refreshTitle(); return; }
+  hideTitle(); resumeCpuGame(s);
 }
 export function playAgain(): void {
-  if (app.mode === 'cpu') startCpu();
+  if (app.mode === 'cpu') { $('#overBg').classList.remove('show'); app.mode = null; app.G = null; showTitle('cpu'); }
   else if (app.mode === 'host') Net.restart();
 }
 export function goTitle(): void {
   if (isOnline()) Net.leave();
   app.mode = null; app.G = null; app.pending = false;
-  closeBattle(true);
-  ['tradeBg', 'overBg', 'evoBg', 'battleBg', 'dlgBg', 'helpBg'].forEach(id => $('#' + id).classList.remove('show'));
+  resetLocalUI();
+  ['dlgBg', 'helpBg'].forEach(id => $('#' + id).classList.remove('show'));
   showTitle('menu');
 }
 export function hideTitle(): void { $('#title').classList.remove('show'); }
 export function showTitle(panel: TitlePanel): void {
   $('#title').classList.add('show'); $('#title').classList.toggle('compact', panel !== 'menu');
-  $('#tMenu').hidden = panel !== 'menu'; $('#tOnline').hidden = panel !== 'online'; $('#tLobby').hidden = panel !== 'lobby';
+  $('#tMenu').hidden = panel !== 'menu'; $('#tCpu').hidden = panel !== 'cpu'; $('#tOnline').hidden = panel !== 'online'; $('#tLobby').hidden = panel !== 'lobby';
   if (panel !== 'lobby') $('#tNote2').textContent = '';
+  if (panel === 'menu') refreshTitle();
+  if (panel === 'cpu') renderSegs();
+}
+/** 続きから／再開ボタンの表示 */
+export function refreshTitle(): void {
+  const c = loadCpuSave(), h = loadHostSave(), g = loadGuestSave();
+  $('#resumeCpuBtn').hidden = !c; if (c) $('#resumeCpuInfo').textContent = '前回のCPU対戦（' + (c.info || '') + '）';
+  $('#resumeHostBtn').hidden = !h; if (h) $('#resumeHostInfo').textContent = `部屋 ${h.code}・同じコードで部屋を開き直します`;
+  $('#resumeGuestBtn').hidden = !g; if (g) $('#resumeGuestInfo').textContent = `部屋 ${g.code} に再接続します`;
+  $('#modeCpu').classList.toggle('pri', !c && !h && !g);
+}
+/** 進行スピード・手番の選択ボタンの表示 */
+function renderSegs(): void {
+  document.querySelectorAll<HTMLButtonElement>('.speedSeg button').forEach(b => b.classList.toggle('sel', b.dataset.speed === settings.speed));
+  $('#orderSeg').querySelectorAll<HTMLButtonElement>('button').forEach(b => b.classList.toggle('sel', b.dataset.o === settings.cpuOrder));
 }
 function drawTitle(): void {
   let s = ''; const r = 34;
@@ -55,23 +81,38 @@ const cleanCode = (s: string): string => s.toUpperCase().replace(/[^A-Z0-9]/g, '
 
 export function initTitle(): void {
   /* header */
-  $('#helpBtn').onclick = () => $('#helpBg').classList.add('show');
-  $('#tHelp').onclick = () => $('#helpBg').classList.add('show');
+  $('#helpBtn').onclick = () => { renderSegs(); $('#helpBg').classList.add('show'); };
+  $('#tHelp').onclick = () => { renderSegs(); $('#helpBg').classList.add('show'); };
   $('#hClose').onclick = () => $('#helpBg').classList.remove('show');
+  document.querySelectorAll('.speedSeg').forEach(el => el.addEventListener('click', e => {
+    const b = (e.target as Element).closest<HTMLButtonElement>('button[data-speed]'); if (!b) return; setSpeed(b.dataset.speed); renderSegs();
+  }));
+  $('#orderSeg').addEventListener('click', e => {
+    const b = (e.target as Element).closest<HTMLButtonElement>('button[data-o]'); if (!b) return; setCpuOrder(b.dataset.o); renderSegs();
+  });
   $('#newBtn').onclick = () => {
-    if (app.mode === 'cpu') { if (confirm('新しいゲームを始めますか？')) startCpu(); }
-    else if (app.mode === 'host') { if (confirm('同じメンバーで新しいゲームを始めますか？')) Net.restart(); }
+    if (app.mode === 'cpu') {
+      if (confirm('今のゲームを破棄して、新しいゲームを始めますか？\n（続きからは再開できなくなります）')) { store.del(SAVE_CPU); app.mode = null; app.G = null; resetLocalUI(); showTitle('cpu'); }
+    } else if (app.mode === 'host') { if (confirm('同じメンバーで新しいゲームを始めますか？\n（今の盤面は破棄されます）')) Net.restart(); }
   };
   $('#homeBtn').onclick = () => {
     const MODE = app.mode;
-    const msg = MODE === 'host' ? 'タイトルに戻りますか？\n（ホストが抜けるとオンライン対戦は終了します）' : MODE === 'guest' ? 'タイトルに戻りますか？\n（この対戦から抜けます）' : 'タイトルに戻りますか？\n（今のゲームは終了します）';
+    const msg = MODE === 'host' ? 'タイトルに戻りますか？\n（ホストが抜けるとオンライン対戦は終了します）' : MODE === 'guest' ? 'タイトルに戻りますか？\n（この対戦から抜けます）' : 'タイトルに戻りますか？\n（あとで「続きから」再開できます）';
     if (confirm(msg)) goTitle();
   };
   $('#again').onclick = playAgain;
   $('#overHome').onclick = goTitle;
 
   /* title screen */
-  $('#modeCpu').onclick = startCpu;
+  $('#modeCpu').onclick = () => showTitle('cpu');
+  $('#cpuBack').onclick = () => showTitle('menu');
+  $('#cpuStart').onclick = () => {
+    if (loadCpuSave() && !confirm('保存されている「続きから」のゲームは消えます。新しいゲームを始めますか？')) return;
+    startCpu();
+  };
+  $('#resumeCpuBtn').onclick = resumeCpu;
+  $('#resumeHostBtn').onclick = () => { void Net.resumeHost(); };
+  $('#resumeGuestBtn').onclick = () => Net.resumeGuest();
   $('#modeOnline').onclick = () => { $('#tNote1').textContent = ''; showTitle('online'); };
   $('#onlineBack').onclick = () => showTitle('menu');
   $('#hostBtn').onclick = () => { void Net.host(readNick()); };
@@ -82,6 +123,8 @@ export function initTitle(): void {
   };
   $('#codeIn').addEventListener('input', e => { const t = e.target as HTMLInputElement; t.value = cleanCode(t.value); });
   $('#lFill').onchange = () => Net.lobbyChanged();
+  $('#lOrder').addEventListener('click', e => { const b = (e.target as Element).closest<HTMLButtonElement>('button[data-o]'); if (b && !b.disabled) Net.setOrderMode(b.dataset.o); });
+  $('#lList').addEventListener('click', e => { const b = (e.target as Element).closest<HTMLButtonElement>('button.up'); if (b) Net.moveUp(+(b.dataset.k || 0)); });
   $('#startBtn').onclick = () => Net.start();
   $('#lobbyLeave').onclick = () => { goTitle(); };
   $('#copyBtn').onclick = async () => {
@@ -90,7 +133,7 @@ export function initTitle(): void {
     catch { prompt('このリンクを送ってください', u); }
   };
   $('#shareBtn').onclick = () => { navigator.share({ title: '開拓の島 モフルジム', text: `モフルジムで対戦しよう！ 部屋コード：${Net.code()}`, url: Net.url() }).catch(() => {}); };
-  window.addEventListener('pagehide', () => { if (isOnline()) Net.leave(); });
+  window.addEventListener('pagehide', () => { Net.pagehide(); });
 
   drawTitle();
   $<HTMLInputElement>('#nick').value = store.get(NICK_KEY);

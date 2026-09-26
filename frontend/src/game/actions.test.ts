@@ -60,6 +60,61 @@ describe('applyAction', () => {
       setup: g => { g.phase = 'battle'; },
       expected: { want: 'update', check: g => { expect(g.phase).toBe('main'); expect(g.log[0]).toBe('Aは挑戦を見送った'); } },
     },
+    'success: 7のときは自分の番でなくても捨てる資源を選べる': {
+      args: { p: 1, action: () => ({ t: 'discard', r: { sheep: 4 } }) },
+      setup: g => { g.phase = 'discard'; g.discard = { 1: 4 }; g.afterDiscard = 'main'; setRes(g, 1, { sheep: 8 }); },
+      expected: { want: 'update', check: g => { expect(g.players[1].res.sheep).toBe(4); expect(g.phase).toBe('main'); expect(g.discard).toBeNull(); } },
+    },
+    'success: プレイヤーに交換を提案する': {
+      args: { p: 0, action: () => ({ t: 'offer', to: 1, give: { ore: 2 }, want: { wood: 1 } }) },
+      setup: g => setRes(g, 0, { ore: 2 }),
+      expected: { want: 'update', check: g => expect(g.offer).toMatchObject({ from: 0, to: 1, give: { ore: 2 }, want: { wood: 1 }, resp: { 1: 'pending' } }) },
+    },
+    'success: 交換の提案に自分の番でなくても答えられる': {
+      args: { p: 1, action: () => ({ t: 'respond', ok: true }) },
+      setup: g => { setRes(g, 0, { ore: 2 }); setRes(g, 1, { wood: 1 }); applyAction(g, 0, { t: 'offer', to: 1, give: { ore: 2 }, want: { wood: 1 } }); },
+      expected: { want: 'update', check: g => { expect(g.offer).toBeNull(); expect(g.players[0].res).toMatchObject({ ore: 0, wood: 1 }); expect(g.players[1].res).toMatchObject({ ore: 2, wood: 0 }); } },
+    },
+    'success: 自分の提案を取り下げる': {
+      args: { p: 0, action: () => ({ t: 'cancelOffer' }) },
+      setup: g => { setRes(g, 0, { ore: 2 }); applyAction(g, 0, { t: 'offer', to: 'all', give: { ore: 2 }, want: { wood: 1 } }); },
+      expected: { want: 'update', check: g => { expect(g.offer).toBeNull(); expect(g.log[0]).toBe('Aは交換の提案を取り下げた'); } },
+    },
+    'failed: 交換の提案中は他の操作ができない': {
+      args: { p: 0, action: () => ({ t: 'end' }) },
+      setup: g => { setRes(g, 0, { ore: 2 }); applyAction(g, 0, { t: 'offer', to: 'all', give: { ore: 2 }, want: { wood: 1 } }); },
+      expected: { want: false, check: g => { expect(g.cur).toBe(0); expect(g.offer).not.toBeNull(); } },
+    },
+    'failed: 提案がなければ取り下げられない': {
+      args: { p: 0, action: () => ({ t: 'cancelOffer' }) },
+      setup: () => {},
+      expected: { want: false },
+    },
+    'failed: サイコロを振る前は交換を提案できない': {
+      args: { p: 0, action: () => ({ t: 'offer', to: 'all', give: { ore: 1 }, want: { wood: 1 } }) },
+      setup: g => { g.phase = 'roll'; setRes(g, 0, { ore: 1 }); },
+      expected: { want: false, check: g => expect(g.offer).toBeNull() },
+    },
+    'failed: 提案されていないと答えられない': {
+      args: { p: 1, action: () => ({ t: 'respond', ok: true }) },
+      setup: () => {},
+      expected: { want: false },
+    },
+    'failed: 7の捨て札の枚数が違う': {
+      args: { p: 1, action: () => ({ t: 'discard', r: { sheep: 3 } }) },
+      setup: g => { g.phase = 'discard'; g.discard = { 1: 4 }; g.afterDiscard = 'main'; setRes(g, 1, { sheep: 8 }); },
+      expected: { want: false, check: g => { expect(g.players[1].res.sheep).toBe(8); expect(g.phase).toBe('discard'); } },
+    },
+    'failed: 7の捨て札を選んでいる間はターンを終えられない': {
+      args: { p: 0, action: () => ({ t: 'end' }) },
+      setup: g => { g.phase = 'discard'; g.discard = { 1: 4 }; },
+      expected: { want: false, check: g => expect(g.cur).toBe(0) },
+    },
+    'failed: CPU の席の操作は受け付けない': {
+      args: { p: 1, action: () => ({ t: 'respond', ok: true }) },
+      setup: g => { g.players[1].type = 'cpu'; setRes(g, 0, { ore: 1 }); setRes(g, 1, { wood: 1 }); applyAction(g, 0, { t: 'offer', to: 1, give: { ore: 1 }, want: { wood: 1 } }); },
+      expected: { want: false, check: g => expect(g.offer).not.toBeNull() },
+    },
     'failed: 材料が足りないと道を建てられない': {
       args: { p: 0, action: g => ({ t: 'road', e: g.V[0].edges[1] }) },
       setup: g => { g.V[0].owner = 0; setRes(g, 0, { wood: 1 }); },
@@ -124,6 +179,20 @@ describe('applyAction', () => {
     expect(g.phase).toBe('main');
   });
 
+  it('success: 7を振ると CPU はその場で捨て、人間は discard フェーズで選ぶ', () => {
+    const g = mainPhaseGame();
+    g.phase = 'roll';
+    g.players[1].type = 'cpu';
+    setRes(g, 0, { wood: 8 }); setRes(g, 1, { ore: 10 });
+    const calls: [number, number][] = [];
+    const got = applyAction(g, 0, { t: 'roll' }, seqRng([face(3), face(4)]), (gg, i, d) => { calls.push([i, d]); gg.players[i].res.ore -= d; });
+    expect(got).toBe('update');
+    expect(calls).toEqual([[1, 5]]);
+    expect(g.players[1].res.ore).toBe(5);
+    expect(g.phase).toBe('discard');
+    expect(g.discard).toEqual({ 0: 4 });
+  });
+
   it('success: バトルに勝つとバッジを得て main フェーズへ', () => {
     const g = mainPhaseGame();
     g.phase = 'battle';
@@ -135,7 +204,7 @@ describe('applyAction', () => {
   });
 
   it('success: 初期配置はジム→道の順で、2巡目のジムで初期資源をもらう', () => {
-    const g = createGame([{ name: 'A', type: 'local' }, { name: 'B', type: 'local' }], seededRng(3));
+    const g = createGame([{ name: 'A', type: 'local' }, { name: 'B', type: 'local' }], undefined, seededRng(3));
     expect(g.order).toEqual([0, 1, 1, 0]);
     const place = (p: number) => {
       g.cur = p;

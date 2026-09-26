@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { makeBoard } from './board';
 import { COST } from './constants';
 import {
-  afford, applyRoll, canEvolve, canSettle, checkWin, evolve, longestRoad, pay, total, updateLR, vp,
+  afford, applyRoll, canEvolve, canSettle, checkWin, evolve, longestRoad, pay, rawRoad, total, updateLR, vp,
 } from './rules';
-import { findPath, mainPhaseGame, pathVertices, seededRng, seqRng, setRes } from './testHelpers';
+import { findPath, mainPhaseGame, pathVertices, seededRng, setRes } from './testHelpers';
 import type { BuildKind, GameState, Resource, Resources } from './types';
 
 describe('makeBoard', () => {
@@ -88,36 +88,58 @@ describe('applyRoll（サイコロの産出）', () => {
 
 describe('applyRoll（7）', () => {
   const tests: Record<string, {
-    args: { hand: Partial<Resources>; mon: Resource | null; enemyGym: boolean };
-    expected: { total: number; phase: GameState['phase'] };
+    args: { hands: Partial<Resources>[]; mon: Resource | null; enemyGym: boolean; cpu?: number[]; cpuDiscard?: boolean };
+    expected: { totals: number[]; phase: GameState['phase']; discard: Record<number, number> | null; afterDiscard: GameState['afterDiscard']; log?: string };
   }> = {
-    'success: 手札8枚以上は半分捨てる（進化前ならバトルなし）': {
-      args: { hand: { wood: 5, ore: 4 }, mon: null, enemyGym: true },
-      expected: { total: 5, phase: 'main' },
+    'success: 手札8枚以上の人間は半分（切り捨て）を選ぶまで discard フェーズ': {
+      args: { hands: [{ wood: 5, ore: 4 }, { sheep: 8 }, { wheat: 7 }], mon: null, enemyGym: true },
+      expected: { totals: [9, 8, 7], phase: 'discard', discard: { 0: 4, 1: 4 }, afterDiscard: 'main', log: 'A・Bが捨てる資源を選んでいます' },
     },
-    'success: 手札7枚以下は捨てない': {
-      args: { hand: { wood: 7 }, mon: null, enemyGym: true },
-      expected: { total: 7, phase: 'main' },
+    'success: 手札7枚以下なら誰も捨てずに main へ': {
+      args: { hands: [{ wood: 7 }], mon: null, enemyGym: true },
+      expected: { totals: [7, 0, 0], phase: 'main', discard: null, afterDiscard: 'main', log: 'Aのモフルは進化前なのでバトルなし' },
+    },
+    'success: CPU はその場で捨て、人間がいなければそのまま進む': {
+      args: { hands: [{}, { ore: 9 }], mon: null, enemyGym: false, cpu: [1], cpuDiscard: true },
+      expected: { totals: [0, 5, 0], phase: 'main', discard: null, afterDiscard: 'main' },
+    },
+    'success: CPU の捨て処理が渡されなければ CPU も discard フェーズで待つ': {
+      args: { hands: [{}, { ore: 9 }], mon: null, enemyGym: false, cpu: [1] },
+      expected: { totals: [0, 9, 0], phase: 'discard', discard: { 1: 4 }, afterDiscard: 'main' },
     },
     'success: 進化済みで挑戦できるジムがあればバトル': {
-      args: { hand: {}, mon: 'brick', enemyGym: true },
-      expected: { total: 0, phase: 'battle' },
+      args: { hands: [], mon: 'brick', enemyGym: true },
+      expected: { totals: [0, 0, 0], phase: 'battle', discard: null, afterDiscard: 'battle' },
+    },
+    'success: 捨てる人がいれば、バトルは全員が捨て終わってから': {
+      args: { hands: [{}, { sheep: 10 }], mon: 'brick', enemyGym: true },
+      expected: { totals: [0, 10, 0], phase: 'discard', discard: { 1: 5 }, afterDiscard: 'battle' },
     },
     'success: 進化済みでも相手のジムがなければバトルなし': {
-      args: { hand: {}, mon: 'brick', enemyGym: false },
-      expected: { total: 0, phase: 'main' },
+      args: { hands: [], mon: 'brick', enemyGym: false },
+      expected: { totals: [0, 0, 0], phase: 'main', discard: null, afterDiscard: 'main', log: '挑戦できるジムがない' },
     },
   };
   for (const [name, tt] of Object.entries(tests)) {
     it(name, () => {
       const g = mainPhaseGame();
       g.phase = 'roll';
-      setRes(g, 0, tt.args.hand);
+      tt.args.hands.forEach((h, i) => setRes(g, i, h));
+      (tt.args.cpu || []).forEach(i => { g.players[i].type = 'cpu'; });
       g.players[0].mon = tt.args.mon;
       if (tt.args.enemyGym) g.V[10].owner = 1;
-      applyRoll(g, 3, 4, seqRng([0]));
-      expect(total(g.players[0])).toBe(tt.expected.total);
+      const discarded: [number, number][] = [];
+      const cpuDiscard = tt.args.cpuDiscard ? (gg: GameState, i: number, d: number) => { discarded.push([i, d]); gg.players[i].res.ore -= d; } : undefined;
+      applyRoll(g, 3, 4, cpuDiscard);
+      expect(g.dice).toEqual([3, 4]);
+      expect(g.rollN).toBe(1);
+      expect(g.players.map(total)).toEqual(tt.expected.totals);
       expect(g.phase).toBe(tt.expected.phase);
+      expect(g.discard).toEqual(tt.expected.discard);
+      expect(g.afterDiscard).toBe(tt.expected.afterDiscard);
+      expect(g.log[g.log.length - 1]).toBe('🎲7！ Aが7を出した');
+      if (tt.expected.log) expect(g.log[0]).toBe(tt.expected.log);
+      if (tt.args.cpuDiscard) expect(discarded).toEqual([[1, 4]]);
     });
   }
 });
@@ -223,42 +245,85 @@ describe('vp / checkWin（得点と勝利）', () => {
   }
 });
 
-describe('longestRoad / updateLR（最長の道）', () => {
-  it('success: 5本つながると最長の道（+2点）', () => {
+describe('longestRoad / updateLR（最長の道：ジム〜ジムの間の道）', () => {
+  /* 一本道の頂点 vs[0..12] と辺 path[0..11] の上に、道 [i, j) とジムを置いて確かめる */
+  type Gym = { at: number; owner: number; city?: boolean };
+  const tests: Record<string, {
+    args: { roads: [number, number, number][]; gyms: Gym[] };
+    expected: { lens: number[]; lr: number | null; raw0?: number };
+  }> = {
+    'success: ジム〜ジム5本で最長の道': {
+      args: { roads: [[0, 5, 0]], gyms: [{ at: 0, owner: 0 }, { at: 5, owner: 0 }] },
+      expected: { lens: [5, 0], lr: 0, raw0: 5 },
+    },
+    'success: 片方だけジムの5本は対象外（0）': {
+      args: { roads: [[0, 5, 0]], gyms: [{ at: 0, owner: 0 }] },
+      expected: { lens: [0, 0], lr: null, raw0: 5 },
+    },
+    'success: ジム〜ジム4本は対象外': {
+      args: { roads: [[0, 4, 0]], gyms: [{ at: 0, owner: 0 }, { at: 4, owner: 0 }] },
+      expected: { lens: [4, 0], lr: null },
+    },
+    'success: 道が伸びていても数えるのはジム〜都市の間': {
+      args: { roads: [[0, 7, 0]], gyms: [{ at: 0, owner: 0 }, { at: 5, owner: 0, city: true }] },
+      expected: { lens: [5, 0], lr: 0, raw0: 7 },
+    },
+    'success: 途中に相手のジムがあると途切れる': {
+      args: { roads: [[0, 6, 0]], gyms: [{ at: 0, owner: 0 }, { at: 6, owner: 0 }, { at: 3, owner: 1 }] },
+      expected: { lens: [0, 0], lr: null, raw0: 3 },
+    },
+    'success: 途中に自分のジムがあっても通れる': {
+      args: { roads: [[0, 7, 0]], gyms: [{ at: 0, owner: 0 }, { at: 2, owner: 0 }, { at: 7, owner: 0 }] },
+      expected: { lens: [7, 0], lr: 0 },
+    },
+    'success: 道がなければ0': {
+      args: { roads: [], gyms: [{ at: 0, owner: 0 }] },
+      expected: { lens: [0, 0], lr: null, raw0: 0 },
+    },
+  };
+  for (const [name, tt] of Object.entries(tests)) {
+    it(name, () => {
+      const g = mainPhaseGame(1, [{ name: 'A', type: 'local' }, { name: 'B', type: 'remote' }]);
+      const path = findPath(g, 12), vs = pathVertices(g, path);
+      tt.args.roads.forEach(([i, j, p]) => path.slice(i, j).forEach(e => { g.E[e].owner = p; }));
+      tt.args.gyms.forEach(x => { g.V[vs[x.at]].owner = x.owner; g.V[vs[x.at]].city = !!x.city; });
+      updateLR(g);
+      expect(g.lens).toEqual(tt.expected.lens);
+      expect(longestRoad(g, 0)).toBe(tt.expected.lens[0]);
+      expect(g.lr).toBe(tt.expected.lr);
+      if (tt.expected.raw0 !== undefined) expect(rawRoad(g, 0)).toBe(tt.expected.raw0);
+      if (tt.expected.lr !== null) expect(g.log[0]).toBe(`${g.players[tt.expected.lr].name}が最長の道を獲得（+2点）`);
+    });
+  }
+  it('success: 同じ長さなら先に取った人のまま、長くなれば移る', () => {
     const g = mainPhaseGame();
-    const path = findPath(g, 5);
-    path.slice(0, 4).forEach(e => { g.E[e].owner = 0; });
-    updateLR(g);
-    expect(longestRoad(g, 0)).toBe(4);
-    expect(g.lr).toBeNull();
-    g.E[path[4]].owner = 0;
-    updateLR(g);
-    expect(g.lens[0]).toBe(5);
-    expect(g.lr).toBe(0);
-    expect(g.log[0]).toBe('Aが最長の道を獲得（+2点）');
-  });
-  it('success: 相手のジムで道が分断される', () => {
-    const g = mainPhaseGame();
-    const path = findPath(g, 5);
-    path.forEach(e => { g.E[e].owner = 0; });
-    const vs = pathVertices(g, path);
-    g.V[vs[2]].owner = 1;
-    expect(longestRoad(g, 0)).toBe(3);
-  });
-  it('success: 同じ長さでは今の持ち主のまま、長くなれば移る', () => {
-    const g = mainPhaseGame();
-    const path = findPath(g, 12);
+    const path = findPath(g, 12), vs = pathVertices(g, path);
     path.slice(0, 5).forEach(e => { g.E[e].owner = 0; });
+    g.V[vs[0]].owner = 0; g.V[vs[5]].owner = 0;
     updateLR(g);
     expect(g.lr).toBe(0);
-    // path[5] を空けて、B も 5本
+    // path[5] を空けて、B も ジム〜ジム 5本
     path.slice(6, 11).forEach(e => { g.E[e].owner = 1; });
+    g.V[vs[6]].owner = 1; g.V[vs[11]].owner = 1;
     updateLR(g);
     expect(g.lens.slice(0, 2)).toEqual([5, 5]);
     expect(g.lr).toBe(0);
-    // B が 6本になれば移る
-    g.E[path[11]].owner = 1;
+    // B が ジム〜ジム 6本になれば移る
+    g.E[path[11]].owner = 1; g.V[vs[12]].owner = 1;
     updateLR(g);
+    expect(g.lens[1]).toBe(6);
     expect(g.lr).toBe(1);
+    expect(g.log[0]).toBe('Bが最長の道を獲得（+2点）');
+  });
+  it('success: 持ち主の道が5本未満になれば最長の道を失う', () => {
+    const g = mainPhaseGame();
+    const path = findPath(g, 5), vs = pathVertices(g, path);
+    path.forEach(e => { g.E[e].owner = 0; });
+    g.V[vs[0]].owner = 0; g.V[vs[5]].owner = 0;
+    updateLR(g);
+    expect(g.lr).toBe(0);
+    g.V[vs[5]].owner = null;
+    updateLR(g);
+    expect(g.lr).toBeNull();
   });
 });

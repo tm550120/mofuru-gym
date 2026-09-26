@@ -34,11 +34,40 @@
   </div>
 </div>
 
+<div id="toast" role="status" aria-live="polite"></div>
+
 <div class="sheet-bg" id="tradeBg"><div class="sheet">
-  <h2>銀行と交換</h2>
-  <div class="lbl">出す資源（同じものを4枚）</div><div class="pick" id="give"></div>
-  <div class="lbl">もらう資源（1枚）</div><div class="pick" id="get"></div>
-  <div class="row"><button id="tCancel">閉じる</button><button class="pri" id="tOk">交換する</button></div>
+  <div class="seg" id="tTabs"><button data-tab="player">🤝 プレイヤーと交換</button><button data-tab="bank">🏦 銀行と交換</button></div>
+  <div id="tBank">
+    <div class="lbl">出す資源（同じものを4枚）</div><div class="pick" id="give"></div>
+    <div class="lbl">もらう資源（1枚）</div><div class="pick" id="get"></div>
+    <div class="row"><button id="tCancel">閉じる</button><button class="pri" id="tOk">交換する</button></div>
+  </div>
+  <div id="tPlayer" hidden>
+    <div class="lbl">相手</div><div class="seg" id="pTo"></div>
+    <div class="lbl">あなたが出す</div><div class="stps" id="pGive"></div>
+    <div class="lbl">あなたがほしい</div><div class="stps" id="pWant"></div>
+    <div class="row"><button id="pCancel">閉じる</button><button class="pri" id="pOk">提案する</button></div>
+  </div>
+</div></div>
+
+<div class="sheet-bg" id="offerBg"><div class="sheet">
+  <h2 id="oTitle"></h2>
+  <div id="oBody"></div>
+  <div class="row" id="oBtns"></div>
+</div></div>
+
+<div class="sheet-bg" id="discBg"><div class="sheet">
+  <h2>🎲7！ 手札を捨てる</h2>
+  <p id="dInfo"></p>
+  <div class="stps" id="dPick"></div>
+  <div class="row"><button class="pri" id="dOk">捨てる</button></div>
+</div></div>
+
+<div class="sheet-bg" id="logBg"><div class="sheet">
+  <h2>これまでの出来事</h2>
+  <ul class="loglist" id="logList"></ul>
+  <div class="row"><button class="pri" id="lgClose">閉じる</button></div>
 </div></div>
 
 <div class="sheet-bg" id="evoBg"><div class="sheet">
@@ -61,13 +90,17 @@
     <li>サイコロの合計と同じ数字の土地に接するジムは資源を1枚、都市は2枚もらえます。</li>
     <li>資源で道・ジム（開拓地）・都市を建てます。ジムは他の建物から2辺以上離し、自分の道につなげます。</li>
     <li>同じ資源3枚でモフルを進化。🌲草・🧱炎・🐑風・🌾光・🪨岩の5タイプ。</li>
-    <li>7が出たら手札8枚以上の人は半分を捨てます。7を出した人が進化済みなら、相手のジムに挑戦できます。</li>
+    <li>自分の番に「交換」から、銀行と4:1で交換するか、ほかのプレイヤーに交換を提案できます（相手が受けたら成立）。</li>
+    <li>7が出たら手札8枚以上の人は半分（切り捨て）を、自分で選んで捨てます。7を出した人が進化済みなら、相手のジムに挑戦できます。</li>
     <li>バトルは両者サイコロ1個＋ボーナス。進化済み+2、相性有利+1、都市ジム（守り側）+1。同点はジムの勝ち。</li>
     <li>勝つと相手の資源を1枚奪い、バッジを1個もらえます。負けると進化前に戻ります。</li>
     <li>バッジを最初に3個集めた人がチャンピオン（+2点）。その後、チャンピオンより多くバッジを持った人に移ります。</li>
-    <li>ジム1点、都市2点、最長の道（5本以上）2点、チャンピオン2点。10点で勝ち。</li>
+    <li>最長の道：自分のジム（都市）から別の自分のジム（都市）まで、自分の道だけで途切れずにつながった道が5本以上あれば対象。いちばん長い人が+2点（同じ長さなら先に取った人のまま）。途中に相手の建物があると途切れます。</li>
+    <li>ジム1点、都市2点、最長の道2点、チャンピオン2点。10点で勝ち。</li>
   </ul>
   <p>相性：風 → 炎 → 草 → 岩 → 光 → 風（左が右に強い）</p>
+  <h3 class="set-h">進行スピード（CPUの動き・演出）</h3>
+  <div class="seg speedSeg"><button data-speed="slow">ゆっくり</button><button data-speed="normal">ふつう</button><button data-speed="fast">はやい</button></div>
   <div class="row"><button class="pri" id="hClose">閉じる</button></div>
 </div></div>
 
@@ -88,9 +121,24 @@
   <p class="tsub">島に道とジムを建て、モフルを進化させて<br>ジムバトルで競おう。先に10点で勝ち！</p>
 
   <div id="tMenu">
+    <button class="tbtn pri" id="resumeCpuBtn" hidden>▶ 続きから<span id="resumeCpuInfo"></span></button>
+    <button class="tbtn pri" id="resumeHostBtn" hidden>▶ オンライン対戦を再開（ホスト）<span id="resumeHostInfo"></span></button>
+    <button class="tbtn pri" id="resumeGuestBtn" hidden>▶ オンライン対戦に戻る<span id="resumeGuestInfo"></span></button>
+    <p class="tnote" id="tNote0"></p>
     <button class="tbtn pri" id="modeCpu">🤖 CPUと対戦<span>あなた＋CPU 2人</span></button>
     <button class="tbtn" id="modeOnline">👥 フレンド対戦（オンライン）<span>2〜3人・部屋コードで招待</span></button>
     <button class="tlink" id="tHelp">遊び方・ルール</button>
+  </div>
+
+  <div id="tCpu" hidden>
+    <div class="card">
+      <h3>あなたの手番（何番目に行うか）</h3>
+      <div class="seg" id="orderSeg"><button data-o="1">先攻</button><button data-o="2">2番目</button><button data-o="3">3番目</button><button data-o="r">ランダム</button></div>
+      <h3>進行スピード</h3>
+      <div class="seg speedSeg"><button data-speed="slow">ゆっくり</button><button data-speed="normal">ふつう</button><button data-speed="fast">はやい</button></div>
+      <button class="tbtn pri" id="cpuStart">新しいゲームを始める</button>
+    </div>
+    <button class="tlink" id="cpuBack">← 戻る</button>
   </div>
 
   <div id="tOnline" hidden>
@@ -119,6 +167,8 @@
       <h3>参加者 <small id="lCount" style="color:var(--sub);font-weight:500"></small></h3>
       <ul class="lob" id="lList"></ul>
       <label class="chk" id="lFillRow"><input type="checkbox" id="lFill" checked>空いた席をCPUで埋める（3人で遊ぶ）</label>
+      <div class="lbl">手番の決め方</div>
+      <div class="seg" id="lOrder"><button data-o="random">ランダム</button><button data-o="list">リストの順番（▲で入れ替え）</button></div>
       <p class="tinfo" id="lInfo"></p>
       <button class="tbtn pri" id="startBtn" hidden>ゲーム開始</button>
     </div>

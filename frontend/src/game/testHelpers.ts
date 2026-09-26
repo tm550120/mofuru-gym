@@ -31,7 +31,7 @@ const SEATS: Seat[] = [
 
 /** 初期配置を飛ばして本編（main フェーズ・A の番）から始まる状態。盤面の数字はすべて 0 にする */
 export function mainPhaseGame(seed = 1, seats: Seat[] = SEATS): GameState {
-  const g = createGame(seats, seededRng(seed));
+  const g = createGame(seats, undefined, seededRng(seed));
   g.phase = 'main';
   g.setupIdx = g.order.length;
   g.cur = 0;

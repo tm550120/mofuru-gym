@@ -135,3 +135,31 @@ header .sp{flex:1}
 .screen.compact .tisle,.screen.compact .tsub{display:none}
 .screen.compact .tmons{margin-top:4px}
 .or{color:var(--sub);font-size:12px;text-align:center;margin:4px 0 10px}
+#tNote0:empty{display:none}
+/* segmented buttons / steppers / toast */
+.seg{display:flex;gap:6px;margin:6px 0 12px}
+.seg button{flex:1;padding:9px 4px;border-radius:10px;background:var(--soft);font-weight:800;font-size:13px;border:2px solid transparent;min-width:0}
+.seg button.sel{border-color:var(--ink)}
+.seg button:disabled{opacity:.45;cursor:default}
+.stps{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin:6px 0 12px}
+.stp{background:var(--soft);border-radius:10px;text-align:center;padding:4px 0 5px}
+.stp .ic{font-size:20px;display:block}
+.stp b{font-size:18px;display:block;line-height:1.2}
+.stp small{font-size:10px;color:var(--sub);display:block}
+.stp .pm{display:flex;justify-content:center;gap:3px;margin-top:3px}
+.stp .pm button{width:28px;height:28px;border-radius:8px;background:var(--panel);font-weight:800;border:1px solid var(--line);font-size:15px;line-height:1}
+.stp .pm button:disabled{opacity:.3;cursor:default}
+.stp.on{outline:2px solid var(--ink)}
+.obox{background:var(--soft);border-radius:12px;padding:8px 12px;margin-bottom:10px;font-size:14px;line-height:1.8}
+.obox .big2{font-size:22px;letter-spacing:.05em}
+.olist{list-style:none;padding:0;margin:0 0 12px;font-size:14px}
+.olist li{display:flex;justify-content:space-between;padding:6px 10px;border-bottom:1px solid var(--line)}
+.lob li .up{margin-left:6px;width:30px;height:30px;border-radius:8px;background:var(--panel);border:1px solid var(--line);font-weight:800}
+.lob li .no{min-width:30px;font-size:12px;color:var(--sub)}
+#toast{position:fixed;left:50%;top:calc(172px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:max-content;max-width:min(92vw,520px);background:rgba(20,35,38,.9);color:#fff;font-weight:700;font-size:14px;line-height:1.5;padding:8px 14px;border-radius:14px;z-index:9;opacity:0;transition:opacity .25s;pointer-events:none;text-align:center;white-space:pre-line}
+#toast.show{opacity:1}
+#log{cursor:pointer}
+.loglist{list-style:none;padding:0;margin:0 0 12px;font-size:13px;line-height:1.6}
+.loglist li{padding:4px 2px;border-bottom:1px solid var(--line)}
+#dice.seven small{color:#c3302a}
+.set-h{margin:14px 0 2px;font-size:15px}
