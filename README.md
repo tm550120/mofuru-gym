@@ -36,12 +36,65 @@ URL を開くとタイトル画面が出るので、モードを選びます。�
 
 ## ファイル構成
 
-| ファイル | 内容 |
+npm workspaces のモノレポです。
+
+| パス | 内容 |
 | --- | --- |
-| `index.html` | ゲーム本体（HTML・CSS・JavaScriptを1ファイルにまとめたもの） |
-| `manifest.webmanifest` | スマホのホーム画面に追加したときの設定 |
-| `icon-192.png` / `icon-512.png` / `apple-touch-icon.png` | アイコン画像 |
+| `frontend/` | ゲーム本体（Vite + TypeScript）。GitHub Pages に置くのはこのビルド結果 `frontend/dist` |
+| `frontend/index.html` | 画面の HTML |
+| `frontend/src/style.css` | スタイル |
+| `frontend/src/game/` | ルール・状態・型（盤面生成、資源、建設、進化、バトル、得点、最長の道）。DOM に依存しない |
+| `frontend/src/cpu/` | CPU の思考 |
+| `frontend/src/app/` | ゲームの進行（初期配置・ターン・CPU の手番と応答）、アプリ状態、保存（続きから）、進行スピードなどの設定 |
+| `frontend/src/net/` | オンライン対戦（PeerJS ラッパー、メッセージ型、再接続、部屋コード API クライアント） |
+| `frontend/src/ui/` | 画面の描画と操作（盤面、バトル演出、交換・捨て札などのシート、タイトル、ロビー） |
+| `frontend/src/storage.ts` | localStorage のラッパー（ニックネーム・設定・ゲームの保存） |
+| `frontend/public/` | `manifest.webmanifest`（ホーム画面に追加したときの設定）とアイコン画像 |
+| `backend/` | Node.js + TypeScript（Fastify）の小さな API サーバー |
+| `shared/` | frontend / backend で共有する API の型（型のみ） |
+| `.github/workflows/pages.yml` | `frontend/dist` を GitHub Pages にデプロイする |
+
+### バックエンド（任意）
+
+フロントエンドはバックエンドなしでも完全に動きます（CPU 対戦はオフラインで、オンライン対戦は PeerJS で）。バックエンドの役割は次のとおりです。
+
+| メソッド / パス | 内容 |
+| --- | --- |
+| `GET /api/health` | `{ "status": "ok", "rooms": 登録中の部屋数 }` |
+| `POST /api/rooms` | `{ code, peerId }` を登録（有効期限つき、既定2時間）。`201` で `hostToken` を返す。不正な値は `400`、登録済みは `409` |
+| `GET /api/rooms/:code` | 部屋コードからホストの PeerJS ID を返す。無ければ `404` |
+| `DELETE /api/rooms/:code` | `x-host-token` ヘッダーが正しければ削除（`204`）。違えば `403` |
+| それ以外 | `frontend/dist` があれば静的ファイルとして配信 |
+
+部屋コードの登録簿はメモリ上だけにあり、再起動で消えます。フロントエンドは `VITE_ROOM_API_BASE` が設定されているときだけ API を使い、ホストは部屋を作ったときに登録・閉じたときに削除、ゲストは参加時にコードを引きます。API に届かない・見つからないときは、従来どおり PeerJS ID（`mofuru-gym-<コード>`）で直接つなぎます。
+
+環境変数：`PORT`（既定 8787）、`HOST`（既定 127.0.0.1）、`STATIC_DIR`（既定 `frontend/dist`、空文字で配信しない）、`ROOM_TTL_MS`、`CORS_ORIGIN`（別オリジンから API を呼ぶとき）。
 
 ## ローカルで動かす
 
-`index.html` をブラウザで開くだけで CPU 対戦が遊べます。ビルドやインストールは不要です。オンライン対戦を試すときは `python3 -m http.server` などでローカルサーバー経由で開いてください（インターネット接続が必要です）。
+Node.js 20.19 以上が必要です。
+
+```sh
+npm install
+npm run dev        # バックエンド(:8787) とフロントエンド(:5173) を同時に起動
+```
+
+http://localhost:5173/ を開きます。開発時は `/api` がバックエンドに中継されます（`frontend/.env.development`）。フロントエンドだけ動かすなら `npm run dev -w frontend` です。
+
+その他のコマンド：
+
+```sh
+npm run build      # frontend/dist と backend/dist を作る
+npm test           # Vitest（ゲームロジックとバックエンド API）
+npm run typecheck  # 全パッケージの型チェック
+npm start          # ビルド済みのバックエンドを起動（frontend/dist も配信）
+npm run preview -w frontend   # ビルドしたフロントエンドだけを確認
+```
+
+同じオリジンでバックエンドから配信し、部屋コード API も使う場合は `VITE_ROOM_API_BASE=/api npm run build` でビルドしてから `npm start` します。
+
+## GitHub Pages へのデプロイ
+
+`main` に push すると `.github/workflows/pages.yml` が型チェック・テスト・`frontend` のビルドを行い、`frontend/dist` を GitHub Pages に公開します。ビルドは相対パス（Vite の `base: './'`）なので `/mofuru-gym/` 配下でもそのまま動きます。
+
+初回だけ、リポジトリの Settings → Pages → Build and deployment の Source を「GitHub Actions」に切り替えてください（これまでのブランチ直下の `index.html` はもうありません）。

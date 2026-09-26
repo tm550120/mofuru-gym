@@ -1,0 +1,19 @@
+{
+  "name": "@mofuru-gym/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "フロントエンドとバックエンドで共有する型定義（型のみ・実行時コードなし）",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
+}

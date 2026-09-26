@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>開拓の島 モフルジム</title>
+<meta name="description" content="島を開拓し、モンスター「モフル」を進化させてジムバトル。スマホで遊べる無料のボードゲーム。">
+<meta name="theme-color" content="#2b7b8c">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="モフルジム">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<div id="app">
+  <header><h1>🏝️ モフルジム</h1><span id="roomTag" hidden></span><div class="sp"></div><button class="icon-btn" id="helpBtn" aria-label="遊び方">?</button><button class="icon-btn" id="newBtn" aria-label="新しいゲーム">↻</button><button class="icon-btn" id="homeBtn" aria-label="タイトルに戻る">⌂</button></header>
+  <div id="players"></div>
+  <div id="msg"></div>
+  <div id="boardWrap"><svg id="board" viewBox="-252 -218 504 436" preserveAspectRatio="xMidYMid meet"></svg></div>
+  <div class="panel">
+    <div class="row1"><div id="dice"></div><button id="mymon" aria-label="自分のモンスター"></button><div id="res"></div></div>
+    <div id="log"></div>
+    <div class="acts">
+      <button class="ab" data-act="road">道<span>🌲🧱</span></button>
+      <button class="ab" data-act="settlement">ジム<span>🌲🧱🐑🌾</span></button>
+      <button class="ab" data-act="city">都市<span>🌾🌾🪨🪨🪨</span></button>
+      <button class="ab" data-act="evolve">進化<span>同じ資源×3</span></button>
+      <button class="ab" data-act="trade">交換<span>銀行4:1</span></button>
+    </div>
+    <button id="main"></button>
+  </div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<div class="sheet-bg" id="tradeBg"><div class="sheet">
+  <div class="seg" id="tTabs"><button data-tab="player">🤝 プレイヤーと交換</button><button data-tab="bank">🏦 銀行と交換</button></div>
+  <div id="tBank">
+    <div class="lbl">出す資源（同じものを4枚）</div><div class="pick" id="give"></div>
+    <div class="lbl">もらう資源（1枚）</div><div class="pick" id="get"></div>
+    <div class="row"><button id="tCancel">閉じる</button><button class="pri" id="tOk">交換する</button></div>
+  </div>
+  <div id="tPlayer" hidden>
+    <div class="lbl">相手</div><div class="seg" id="pTo"></div>
+    <div class="lbl">あなたが出す</div><div class="stps" id="pGive"></div>
+    <div class="lbl">あなたがほしい</div><div class="stps" id="pWant"></div>
+    <div class="row"><button id="pCancel">閉じる</button><button class="pri" id="pOk">提案する</button></div>
+  </div>
+</div></div>
+
+<div class="sheet-bg" id="offerBg"><div class="sheet">
+  <h2 id="oTitle"></h2>
+  <div id="oBody"></div>
+  <div class="row" id="oBtns"></div>
+</div></div>
+
+<div class="sheet-bg" id="discBg"><div class="sheet">
+  <h2>🎲7！ 手札を捨てる</h2>
+  <p id="dInfo"></p>
+  <div class="stps" id="dPick"></div>
+  <div class="row"><button class="pri" id="dOk">捨てる</button></div>
+</div></div>
+
+<div class="sheet-bg" id="logBg"><div class="sheet">
+  <h2>これまでの出来事</h2>
+  <ul class="loglist" id="logList"></ul>
+  <div class="row"><button class="pri" id="lgClose">閉じる</button></div>
+</div></div>
+
+<div class="sheet-bg" id="evoBg"><div class="sheet">
+  <h2>モフルを進化させる</h2>
+  <div class="cycle">相性：風 → 炎 → 草 → 岩 → 光 → 風<br>矢印の左が右に強い（有利なら+1）</div>
+  <div class="evo" id="evoList"></div>
+  <div class="row"><button id="eCancel">閉じる</button><button class="pri" id="eOk">進化する</button></div>
+</div></div>
+
+<div class="sheet-bg" id="battleBg"><div class="sheet battle">
+  <h2 id="bTitle">ジムバトル</h2>
+  <div class="bgrid"><div class="side" id="bA"></div><div class="vs">VS</div><div class="side" id="bD"></div></div>
+  <p id="bResult"></p>
+  <div class="row"><button class="pri" id="bOk">OK</button></div>
+</div></div>
+
+<div class="sheet-bg" id="helpBg"><div class="sheet">
+  <h2>遊び方</h2>
+  <ul>
+    <li>サイコロの合計と同じ数字の土地に接するジムは資源を1枚、都市は2枚もらえます。</li>
+    <li>資源で道・ジム（開拓地）・都市を建てます。ジムは他の建物から2辺以上離し、自分の道につなげます。</li>
+    <li>同じ資源3枚でモフルを進化。🌲草・🧱炎・🐑風・🌾光・🪨岩の5タイプ。</li>
+    <li>自分の番に「交換」から、銀行と4:1で交換するか、ほかのプレイヤーに交換を提案できます（相手が受けたら成立）。</li>
+    <li>7が出たら手札8枚以上の人は半分（切り捨て）を、自分で選んで捨てます。7を出した人が進化済みなら、相手のジムに挑戦できます。</li>
+    <li>バトルは両者サイコロ1個＋ボーナス。進化済み+2、相性有利+1、都市ジム（守り側）+1。同点はジムの勝ち。</li>
+    <li>勝つと相手の資源を1枚奪い、バッジを1個もらえます。負けると進化前に戻ります。</li>
+    <li>バッジを最初に3個集めた人がチャンピオン（+2点）。その後、チャンピオンより多くバッジを持った人に移ります。</li>
+    <li>最長の道：自分のジム（都市）から別の自分のジム（都市）まで、自分の道だけで途切れずにつながった道が5本以上あれば対象。いちばん長い人が+2点（同じ長さなら先に取った人のまま）。途中に相手の建物があると途切れます。</li>
+    <li>ジム1点、都市2点、最長の道2点、チャンピオン2点。10点で勝ち。</li>
+  </ul>
+  <p>相性：風 → 炎 → 草 → 岩 → 光 → 風（左が右に強い）</p>
+  <h3 class="set-h">進行スピード（CPUの動き・演出）</h3>
+  <div class="seg speedSeg"><button data-speed="slow">ゆっくり</button><button data-speed="normal">ふつう</button><button data-speed="fast">はやい</button></div>
+  <div class="row"><button class="pri" id="hClose">閉じる</button></div>
+</div></div>
+
+<div class="sheet-bg" id="overBg"><div class="sheet" style="text-align:center">
+  <div class="big" id="overIcon">🏆</div><h2 id="overTitle"></h2><p id="overText"></p>
+  <div class="row"><button id="overHome">タイトルへ</button><button class="pri" id="again">もう一度遊ぶ</button></div>
+</div></div>
+
+<div class="sheet-bg" id="dlgBg"><div class="sheet" style="text-align:center">
+  <h2 id="dlgTitle"></h2><p id="dlgText"></p>
+  <div class="row" id="dlgBtns"></div>
+</div></div>
+
+<div class="screen show" id="title"><div class="tbox">
+  <div class="tisle"><svg class="map" id="tMap" viewBox="-130 -118 260 236" aria-hidden="true"></svg><div class="hero" id="tHero"></div></div>
+  <div class="tmons" id="tMons"></div>
+  <h1 class="ttl"><small>開拓の島</small>モフルジム</h1>
+  <p class="tsub">島に道とジムを建て、モフルを進化させて<br>ジムバトルで競おう。先に10点で勝ち！</p>
+
+  <div id="tMenu">
+    <button class="tbtn pri" id="resumeCpuBtn" hidden>▶ 続きから<span id="resumeCpuInfo"></span></button>
+    <button class="tbtn pri" id="resumeHostBtn" hidden>▶ オンライン対戦を再開（ホスト）<span id="resumeHostInfo"></span></button>
+    <button class="tbtn pri" id="resumeGuestBtn" hidden>▶ オンライン対戦に戻る<span id="resumeGuestInfo"></span></button>
+    <p class="tnote" id="tNote0"></p>
+    <button class="tbtn pri" id="modeCpu">🤖 CPUと対戦<span>あなた＋CPU 2人</span></button>
+    <button class="tbtn" id="modeOnline">👥 フレンド対戦（オンライン）<span>2〜3人・部屋コードで招待</span></button>
+    <button class="tlink" id="tHelp">遊び方・ルール</button>
+  </div>
+
+  <div id="tCpu" hidden>
+    <div class="card">
+      <h3>あなたの手番（何番目に行うか）</h3>
+      <div class="seg" id="orderSeg"><button data-o="1">先攻</button><button data-o="2">2番目</button><button data-o="3">3番目</button><button data-o="r">ランダム</button></div>
+      <h3>進行スピード</h3>
+      <div class="seg speedSeg"><button data-speed="slow">ゆっくり</button><button data-speed="normal">ふつう</button><button data-speed="fast">はやい</button></div>
+      <button class="tbtn pri" id="cpuStart">新しいゲームを始める</button>
+    </div>
+    <button class="tlink" id="cpuBack">← 戻る</button>
+  </div>
+
+  <div id="tOnline" hidden>
+    <div class="card">
+      <label class="lbl" for="nick">ニックネーム</label>
+      <input class="field" id="nick" maxlength="10" autocomplete="nickname" placeholder="例：モフ太郎">
+      <h3>部屋を作る</h3>
+      <button class="tbtn pri" id="hostBtn">部屋を作ってフレンドを招待</button>
+      <div class="or">— または —</div>
+      <h3>部屋に参加する</h3>
+      <input class="field code-in" id="codeIn" maxlength="5" autocomplete="off" autocapitalize="characters" placeholder="部屋コード（5文字）">
+      <button class="tbtn" id="joinBtn">参加する</button>
+    </div>
+    <p class="tnote" id="tNote1"></p>
+    <button class="tlink" id="onlineBack">← 戻る</button>
+  </div>
+
+  <div id="tLobby" hidden>
+    <div class="card">
+      <div class="lbl" style="text-align:center">部屋コード</div>
+      <div class="code" id="lCode">-----</div>
+      <div class="url" id="lUrl"></div>
+      <div class="row2" id="lShare"><button class="sbtn" id="copyBtn">リンクをコピー</button><button class="sbtn" id="shareBtn">共有する</button></div>
+    </div>
+    <div class="card">
+      <h3>参加者 <small id="lCount" style="color:var(--sub);font-weight:500"></small></h3>
+      <ul class="lob" id="lList"></ul>
+      <label class="chk" id="lFillRow"><input type="checkbox" id="lFill" checked>空いた席をCPUで埋める（3人で遊ぶ）</label>
+      <div class="lbl">手番の決め方</div>
+      <div class="seg" id="lOrder"><button data-o="random">ランダム</button><button data-o="list">リストの順番（▲で入れ替え）</button></div>
+      <p class="tinfo" id="lInfo"></p>
+      <button class="tbtn pri" id="startBtn" hidden>ゲーム開始</button>
+    </div>
+    <p class="tnote" id="tNote2"></p>
+    <button class="tlink" id="lobbyLeave">部屋を出る</button>
+  </div>
+</div></div>
+
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
