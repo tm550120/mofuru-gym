@@ -16,7 +16,7 @@
 </head>
 <body>
 <div id="app">
-  <header><h1>🏝️ モフルジム</h1><span id="roomTag" hidden></span><div class="sp"></div><button class="icon-btn" id="helpBtn" aria-label="遊び方">?</button><button class="icon-btn" id="newBtn" aria-label="新しいゲーム">↻</button><button class="icon-btn" id="homeBtn" aria-label="タイトルに戻る">⌂</button></header>
+  <header><h1>🏝️ モフルジム</h1><span id="roomTag" hidden></span><div class="sp"></div><button class="icon-btn" id="helpBtn" aria-label="遊び方">?</button><button class="icon-btn" id="newBtn" aria-label="新しいゲーム">↻</button><button class="icon-btn" id="soundBtn" aria-label="効果音" data-feature="sound" hidden></button><button class="icon-btn" id="homeBtn" aria-label="タイトルに戻る">⌂</button></header>
   <div id="players"></div>
   <div id="msg"></div>
   <div id="boardWrap"><svg id="board" viewBox="-252 -218 504 436" preserveAspectRatio="xMidYMid meet"></svg></div>
@@ -101,6 +101,10 @@
   <p>相性：風 → 炎 → 草 → 岩 → 光 → 風（左が右に強い）</p>
   <h3 class="set-h">進行スピード（CPUの動き・演出）</h3>
   <div class="seg speedSeg"><button data-speed="slow">ゆっくり</button><button data-speed="normal">ふつう</button><button data-speed="fast">はやい</button></div>
+  <div data-feature="sound" hidden>
+    <h3 class="set-h">効果音（バトル）</h3>
+    <div class="seg soundSeg"><button data-sound="on">🔊 オン</button><button data-sound="off">🔇 オフ</button></div>
+  </div>
   <div class="row"><button class="pri" id="hClose">閉じる</button></div>
 </div></div>
 
@@ -136,6 +140,10 @@
       <div class="seg" id="orderSeg"><button data-o="1">先攻</button><button data-o="2">2番目</button><button data-o="3">3番目</button><button data-o="r">ランダム</button></div>
       <h3>進行スピード</h3>
       <div class="seg speedSeg"><button data-speed="slow">ゆっくり</button><button data-speed="normal">ふつう</button><button data-speed="fast">はやい</button></div>
+      <div data-feature="sound" hidden>
+        <h3>効果音（バトル）</h3>
+        <div class="seg soundSeg"><button data-sound="on">🔊 オン</button><button data-sound="off">🔇 オフ</button></div>
+      </div>
       <button class="tbtn pri" id="cpuStart">新しいゲームを始める</button>
     </div>
     <button class="tlink" id="cpuBack">← 戻る</button>

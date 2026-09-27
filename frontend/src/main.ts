@@ -1,5 +1,6 @@
 import './style.css';
 import { hooks } from './app/session';
+import { initAudioUnlock } from './audio/sfx';
 import { Net } from './net/online';
 import { waitBattleClosed } from './ui/battle';
 import { initBoard } from './ui/board';
@@ -17,6 +18,7 @@ hooks.resetLocalUI = resetLocalUI;
 hooks.adoptLoaded = adoptLoaded;
 hooks.waitBattleClosed = waitBattleClosed;
 
+initAudioUnlock();
 initBoard();
 initControls();
 initSheets();

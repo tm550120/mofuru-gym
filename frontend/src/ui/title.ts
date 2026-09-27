@@ -1,8 +1,9 @@
 /* タイトル画面・モード選択・ヘッダーのボタン */
 import { newGame, resumeCpuGame } from '../app/session';
 import { SAVE_CPU, loadCpuSave, loadGuestSave, loadHostSave } from '../app/save';
-import { setCpuOrder, setSpeed, settings } from '../app/settings';
+import { setCpuOrder, setSound, setSpeed, settings } from '../app/settings';
 import { app, isOnline } from '../app/state';
+import { applyFeatureVisibility } from '../features';
 import { COLORS, ICON, SQ3, TILE } from '../game/constants';
 import { cpuSeq } from '../game/rules';
 import type { TileType } from '../game/types';
@@ -53,8 +54,11 @@ export function refreshTitle(): void {
   $('#resumeGuestBtn').hidden = !g; if (g) $('#resumeGuestInfo').textContent = `部屋 ${g.code} に再接続します`;
   $('#modeCpu').classList.toggle('pri', !c && !h && !g);
 }
-/** 進行スピード・手番の選択ボタンの表示 */
+/** 進行スピード・手番・効果音の選択ボタンの表示 */
 function renderSegs(): void {
+  document.querySelectorAll<HTMLButtonElement>('.soundSeg button').forEach(b => b.classList.toggle('sel', (b.dataset.sound === 'on') === settings.sound));
+  const sb = $('#soundBtn'); sb.textContent = settings.sound ? '🔊' : '🔇';
+  sb.setAttribute('aria-label', settings.sound ? '効果音：オン（タップでオフ）' : '効果音：オフ（タップでオン）'); sb.setAttribute('aria-pressed', String(settings.sound));
   document.querySelectorAll<HTMLButtonElement>('.speedSeg button').forEach(b => b.classList.toggle('sel', b.dataset.speed === settings.speed));
   $('#orderSeg').querySelectorAll<HTMLButtonElement>('button').forEach(b => b.classList.toggle('sel', b.dataset.o === settings.cpuOrder));
 }
@@ -87,6 +91,10 @@ export function initTitle(): void {
   document.querySelectorAll('.speedSeg').forEach(el => el.addEventListener('click', e => {
     const b = (e.target as Element).closest<HTMLButtonElement>('button[data-speed]'); if (!b) return; setSpeed(b.dataset.speed); renderSegs();
   }));
+  document.querySelectorAll('.soundSeg').forEach(el => el.addEventListener('click', e => {
+    const b = (e.target as Element).closest<HTMLButtonElement>('button[data-sound]'); if (!b) return; setSound(b.dataset.sound === 'on'); renderSegs();
+  }));
+  $('#soundBtn').onclick = () => { setSound(!settings.sound); renderSegs(); };
   $('#orderSeg').addEventListener('click', e => {
     const b = (e.target as Element).closest<HTMLButtonElement>('button[data-o]'); if (!b) return; setCpuOrder(b.dataset.o); renderSegs();
   });
@@ -136,6 +144,8 @@ export function initTitle(): void {
   window.addEventListener('pagehide', () => { Net.pagehide(); });
 
   drawTitle();
+  applyFeatureVisibility();
+  renderSegs();
   $<HTMLInputElement>('#nick').value = store.get(NICK_KEY);
   const room = new URLSearchParams(location.search).get('room');
   if (room) {

@@ -1,6 +1,8 @@
 /* バトル演出（G.battle を全員の端末で表示する） */
 import { hooks } from '../app/session';
 import { app } from '../app/state';
+import { battleSound } from '../audio/outcome';
+import { sfxBattleStart, sfxDiceTick, sfxResult } from '../audio/sfx';
 import { DIE, TYPE_JA } from '../game/constants';
 import { die } from '../game/random';
 import { isCpu, monName } from '../game/rules';
@@ -43,10 +45,11 @@ export function showBattle(b: BattleResult): void {
   $('#bResult').textContent = 'サイコロを振っています…';
   const ok = $<HTMLButtonElement>('#bOk'); ok.disabled = true;
   $('#battleBg').classList.add('show');
+  sfxBattleStart();
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let n = 0; const dvA = bA.querySelector('.dv') as HTMLElement, dvD = bD.querySelector('.dv') as HTMLElement;
   let done = false;
-  const spin = setInterval(() => { dvA.textContent = DIE[die()]; dvD.textContent = DIE[die()]; if (++n >= 8) finish(); }, reduce ? 0 : 90);
+  const spin = setInterval(() => { dvA.textContent = DIE[die()]; dvD.textContent = DIE[die()]; if (++n >= 8) finish(); else sfxDiceTick(); }, reduce ? 0 : 90);
   timers.push(spin);
   function finish(): void {
     if (done) return; done = true; clearInterval(spin);
@@ -54,6 +57,7 @@ export function showBattle(b: BattleResult): void {
     (bA.querySelector('[data-tot]') as HTMLElement).textContent = String(b.ta); (bD.querySelector('[data-tot]') as HTMLElement).textContent = String(b.td);
     (b.win === a ? bA : bD).classList.add('win');
     $('#bResult').textContent = b.text;
+    sfxResult(battleSound(b, app.me));
     ok.disabled = false;
     const involved = (a === app.me || d === app.me) && !isCpu(app.G!, app.me);
     if (!involved) timers.push(setTimeout(() => closeBattle(), 2600));
