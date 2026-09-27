@@ -1,6 +1,8 @@
 /* 効果音（Web Audio API で合成。音声ファイルは使わない）
+ * 試験機能（features.ts の 'sound'）がオフの端末では一切鳴らさず、AudioContext も作らない。
  * AudioContext は必要になったときに1つだけ作る。使えない環境では何もしない（例外を投げない）。 */
 import { settings } from '../app/settings';
+import { isFeatureOn } from '../features';
 import type { BattleSound } from './outcome';
 
 type Ctor = typeof AudioContext;
@@ -23,9 +25,19 @@ function getCtx(): AudioContext | null {
   return ctx;
 }
 
-/** 鳴らせる状態の AudioContext（音OFF・使えない・閉じているなら null） */
+let preview = false;
+/** 管理ページ（テスト台）用：試験機能・ユーザー設定に関係なく鳴らす */
+export function setSoundPreview(on: boolean): void { preview = on; }
+
+/** 効果音を鳴らしてよいか：試験機能がオンかつユーザー設定がオン。管理ページのプレビュー中は常に鳴らす */
+export const soundAllowed = (feature: boolean, userOn: boolean, previewOn: boolean): boolean => previewOn || (feature && userOn);
+
+/** いまこの端末で効果音を鳴らしてよいか */
+export const canPlaySound = (): boolean => soundAllowed(isFeatureOn('sound'), settings.sound, preview);
+
+/** 鳴らせる状態の AudioContext（鳴らさない設定・使えない・閉じているなら null） */
 function ready(): AudioContext | null {
-  if (!settings.sound) return null;
+  if (!canPlaySound()) return null;
   const c = getCtx(); if (!c || !master) return null;
   try { if (c.state === 'suspended') c.resume().catch(() => {}); } catch { /* 無視 */ }
   return c.state === 'closed' ? null : c;
@@ -93,9 +105,11 @@ export function sfxResult(kind: BattleSound): void {
 
 /**
  * スマホの自動再生制限対策：最初のユーザー操作で AudioContext を作って再開する。
- * 再開できたらリスナーを外す。
+ * 再開できたらリスナーを外す。試験機能がオフの端末では何もしない。
  */
 export function initAudioUnlock(): void {
+  // 試験機能がオフなら AudioContext を作らない（リスナーも付けない）
+  if (!preview && !isFeatureOn('sound')) return;
   const evs = ['pointerdown', 'touchend', 'keydown'] as const;
   const off = (): void => evs.forEach(e => document.removeEventListener(e, unlock, true));
   function unlock(): void {

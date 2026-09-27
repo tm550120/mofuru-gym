@@ -8,3 +8,8 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+/** ビルド時に埋め込むコミット（短い SHA。取れないときは 'dev'） */
+declare const __APP_COMMIT__: string;
+/** ビルド日時（ISO 8601） */
+declare const __BUILD_TIME__: string;

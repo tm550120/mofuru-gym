@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>モフルジム 管理ページ</title>
+<meta name="theme-color" content="#2b7b8c">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="screen show admin" id="admin"><div class="tbox">
+  <h1 class="ttl"><small>モフルジム</small>管理ページ</h1>
+
+  <form id="gate" autocomplete="off" novalidate>
+    <div class="card">
+      <label class="lbl" for="keyIn">アクセスキー</label>
+      <input class="field code-in" id="keyIn" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="12" autocomplete="off">
+      <button class="tbtn pri" id="keyOk" type="submit">開く</button>
+      <p class="tnote" id="keyErr" role="alert"></p>
+    </div>
+  </form>
+
+  <div id="panel" hidden>
+    <div class="card">
+      <h3>バージョン</h3>
+      <p class="ainfo">コミット <b id="verCommit"></b><br>ビルド日時 <b id="verTime"></b></p>
+    </div>
+
+    <div class="card">
+      <h3>試験機能</h3>
+      <p class="ainfo">この端末（このブラウザ）だけに反映されます。一般のプレイヤーには表示されません。</p>
+      <div id="featList"></div>
+      <a class="tbtn pri alink" href="./index.html">ゲームを開く</a>
+    </div>
+
+    <div class="card">
+      <h3>効果音テスト</h3>
+      <p class="ainfo">管理ページでは試験機能の設定に関係なく鳴ります。</p>
+      <div class="agrid" id="sfxBtns">
+        <button class="sbtn" data-sfx="start">開始</button>
+        <button class="sbtn" data-sfx="dice">サイコロ</button>
+        <button class="sbtn" data-sfx="win">勝ち</button>
+        <button class="sbtn" data-sfx="lose">負け</button>
+        <button class="sbtn" data-sfx="watch">観戦</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>演出テスト（ジムバトル）</h3>
+      <p class="ainfo">ダミーの盤面で、実際のバトル演出（表示＋効果音）を再生します。</p>
+      <div class="agrid" id="demoBtns">
+        <button class="sbtn" data-demo="win">勝ち</button>
+        <button class="sbtn" data-demo="lose">負け</button>
+        <button class="sbtn" data-demo="watch">観戦</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>データ</h3>
+      <div id="dataBtns">
+        <button class="tbtn" data-clear="save">保存データ（続きから）を削除</button>
+        <button class="tbtn" data-clear="settings">設定を初期化<span>進行スピード・手番・効果音のオン／オフ</span></button>
+      </div>
+      <div id="confirmBox" class="aconfirm" hidden>
+        <p id="confirmText"></p>
+        <div class="row2"><button class="sbtn" id="confirmNo">やめる</button><button class="sbtn danger" id="confirmYes">削除する</button></div>
+      </div>
+      <p class="ainfo" id="dataMsg" role="status" aria-live="polite"></p>
+    </div>
+
+    <button class="tlink" id="lockBtn">ロックする</button>
+  </div>
+</div></div>
+
+<div class="sheet-bg" id="battleBg"><div class="sheet battle">
+  <h2 id="bTitle">ジムバトル</h2>
+  <div class="bgrid"><div class="side" id="bA"></div><div class="vs">VS</div><div class="side" id="bD"></div></div>
+  <p id="bResult"></p>
+  <div class="row"><button class="pri" id="bOk">OK</button></div>
+</div></div>
+
+<script type="module" src="/src/admin/main.ts"></script>
+</body>
+</html>

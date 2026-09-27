@@ -7,6 +7,9 @@ export type Speed = 'slow' | 'normal' | 'fast';
 export const SPEEDS: Record<Speed, number> = { slow: 1.7, normal: 1, fast: .5 };
 const SPEED_KEY = 'mofuru-speed', ORDER_KEY = 'mofuru-order', SOUND_KEY = 'mofuru-sound';
 
+/** 設定のキー（管理ページの「設定を初期化」で消す） */
+export const SETTING_KEYS = [SPEED_KEY, ORDER_KEY, SOUND_KEY] as const;
+
 const isSpeed = (s: string): s is Speed => Object.prototype.hasOwnProperty.call(SPEEDS, s);
 const isOrder = (s: string): s is CpuOrder => ['1', '2', '3', 'r'].includes(s);
 

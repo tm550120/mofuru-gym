@@ -3,6 +3,7 @@ import { newGame, resumeCpuGame } from '../app/session';
 import { SAVE_CPU, loadCpuSave, loadGuestSave, loadHostSave } from '../app/save';
 import { setCpuOrder, setSound, setSpeed, settings } from '../app/settings';
 import { app, isOnline } from '../app/state';
+import { applyFeatureVisibility } from '../features';
 import { COLORS, ICON, SQ3, TILE } from '../game/constants';
 import { cpuSeq } from '../game/rules';
 import type { TileType } from '../game/types';
@@ -143,6 +144,7 @@ export function initTitle(): void {
   window.addEventListener('pagehide', () => { Net.pagehide(); });
 
   drawTitle();
+  applyFeatureVisibility();
   renderSegs();
   $<HTMLInputElement>('#nick').value = store.get(NICK_KEY);
   const room = new URLSearchParams(location.search).get('room');
