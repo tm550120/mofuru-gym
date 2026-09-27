@@ -49,6 +49,18 @@
     </div>
 
     <div class="card">
+      <h3>BGMテスト</h3>
+      <p class="ainfo">管理ページでは試験機能の設定に関係なく流れます（自動では流れません）。曲を切り替えると短くクロスフェードします。</p>
+      <div class="agrid" id="bgmBtns">
+        <button class="sbtn" data-bgm="title">タイトル</button>
+        <button class="sbtn" data-bgm="game">ゲーム</button>
+        <button class="sbtn" data-bgm="battle">バトル</button>
+        <button class="sbtn" data-bgm="stop">停止</button>
+      </div>
+      <p class="ainfo" id="bgmNow" role="status" aria-live="polite">停止中</p>
+    </div>
+
+    <div class="card">
       <h3>演出テスト（ジムバトル）</h3>
       <p class="ainfo">ダミーの盤面で、実際のバトル演出（表示＋効果音）を再生します。</p>
       <div class="agrid" id="demoBtns">
@@ -62,7 +74,7 @@
       <h3>データ</h3>
       <div id="dataBtns">
         <button class="tbtn" data-clear="save">保存データ（続きから）を削除</button>
-        <button class="tbtn" data-clear="settings">設定を初期化<span>進行スピード・手番・効果音のオン／オフ</span></button>
+        <button class="tbtn" data-clear="settings">設定を初期化<span>進行スピード・手番・効果音・BGMのオン／オフ</span></button>
       </div>
       <div id="confirmBox" class="aconfirm" hidden>
         <p id="confirmText"></p>

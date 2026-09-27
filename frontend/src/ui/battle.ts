@@ -9,6 +9,7 @@ import { isCpu, monName } from '../game/rules';
 import type { BattleResult, Bonus, Mon } from '../game/types';
 import { monSVG } from './art';
 import { $, esc } from './dom';
+import { syncMusic } from './music';
 
 export const battleUI: {
   /** 表示中のバトル */
@@ -29,6 +30,7 @@ export function closeBattle(silent?: boolean): void {
   timers.forEach(t => { clearTimeout(t); clearInterval(t); }); timers = [];
   $('#battleBg').classList.remove('show'); $('#bOk').onclick = null;
   battleUI.open = null; const w = waiters; waiters = []; w.forEach(f => f());
+  syncMusic();
   if (!silent) hooks.render();
 }
 
@@ -45,6 +47,7 @@ export function showBattle(b: BattleResult): void {
   $('#bResult').textContent = 'サイコロを振っています…';
   const ok = $<HTMLButtonElement>('#bOk'); ok.disabled = true;
   $('#battleBg').classList.add('show');
+  syncMusic();
   sfxBattleStart();
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let n = 0; const dvA = bA.querySelector('.dv') as HTMLElement, dvD = bD.querySelector('.dv') as HTMLElement;

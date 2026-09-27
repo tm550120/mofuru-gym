@@ -5,6 +5,7 @@ import { store } from './storage';
 
 export const FEATURES = [
   { id: 'sound', name: '効果音', desc: 'ジムバトルの効果音（開始・サイコロ・勝ち／負け・観戦）と、そのオン／オフボタン' },
+  { id: 'bgm', name: 'BGM', desc: '場面ごとのBGM（タイトル・ゲーム中・ジムバトル）と、そのオン／オフボタン' },
 ] as const;
 
 export type FeatureId = (typeof FEATURES)[number]['id'];
