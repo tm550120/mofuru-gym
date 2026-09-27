@@ -1,29 +1,10 @@
 /* 効果音（Web Audio API で合成。音声ファイルは使わない）
  * 試験機能（features.ts の 'sound'）がオフの端末では一切鳴らさず、AudioContext も作らない。
- * AudioContext は必要になったときに1つだけ作る。使えない環境では何もしない（例外を投げない）。 */
+ * AudioContext は BGM と共有（context.ts）。使えない環境では何もしない（例外を投げない）。 */
 import { settings } from '../app/settings';
 import { isFeatureOn } from '../features';
+import { bus, duckBgm, getCtx, resumeCtx, unlockOnGesture } from './context';
 import type { BattleSound } from './outcome';
-
-type Ctor = typeof AudioContext;
-let ctx: AudioContext | null = null;
-let master: GainNode | null = null;
-let failed = false;
-
-/** 全体の音量（控えめ） */
-const MASTER_GAIN = .3;
-
-function getCtx(): AudioContext | null {
-  if (ctx || failed) return ctx;
-  try {
-    const w = window as unknown as { AudioContext?: Ctor; webkitAudioContext?: Ctor };
-    const C = w.AudioContext || w.webkitAudioContext;
-    if (!C) { failed = true; return null; }
-    ctx = new C();
-    master = ctx.createGain(); master.gain.value = MASTER_GAIN; master.connect(ctx.destination);
-  } catch { failed = true; ctx = null; master = null; }
-  return ctx;
-}
 
 let preview = false;
 /** 管理ページ（テスト台）用：試験機能・ユーザー設定に関係なく鳴らす */
@@ -38,9 +19,12 @@ export const canPlaySound = (): boolean => soundAllowed(isFeatureOn('sound'), se
 /** 鳴らせる状態の AudioContext（鳴らさない設定・使えない・閉じているなら null） */
 function ready(): AudioContext | null {
   if (!canPlaySound()) return null;
-  const c = getCtx(); if (!c || !master) return null;
-  try { if (c.state === 'suspended') c.resume().catch(() => {}); } catch { /* 無視 */ }
-  return c.state === 'closed' ? null : c;
+  const c = getCtx(); if (!c || !bus('sfx')) return null;
+  resumeCtx(c);
+  if (c.state === 'closed') return null;
+  // BGM が流れていれば少し小さくして、効果音を聞こえやすくする
+  duckBgm();
+  return c;
 }
 
 /** 1音：周波数 f を t 秒後から len 秒（短いアタック＋減衰）。slideTo を渡すと音程を滑らせる */
@@ -53,7 +37,7 @@ function tone(c: AudioContext, f: number, t: number, len: number, type: Oscillat
     g.gain.linearRampToValueAtTime(vol, s + .008);
     g.gain.setValueAtTime(vol, s + len * .6);
     g.gain.exponentialRampToValueAtTime(.0001, s + len);
-    o.connect(g); g.connect(master!);
+    o.connect(g); g.connect(bus('sfx')!);
     o.start(s); o.stop(s + len + .02);
   } catch { /* 鳴らせなくても続行 */ }
 }
@@ -104,22 +88,11 @@ export function sfxResult(kind: BattleSound): void {
 }
 
 /**
- * スマホの自動再生制限対策：最初のユーザー操作で AudioContext を作って再開する。
- * 再開できたらリスナーを外す。試験機能がオフの端末では何もしない。
+ * スマホの自動再生制限対策：最初のユーザー操作で AudioContext を作って再開する（context.ts）。
+ * 試験機能がオフの端末では何もしない。
  */
 export function initAudioUnlock(): void {
   // 試験機能がオフなら AudioContext を作らない（リスナーも付けない）
   if (!preview && !isFeatureOn('sound')) return;
-  const evs = ['pointerdown', 'touchend', 'keydown'] as const;
-  const off = (): void => evs.forEach(e => document.removeEventListener(e, unlock, true));
-  function unlock(): void {
-    const c = getCtx(); if (!c) { off(); return; }
-    try {
-      // iOS Safari はユーザー操作中に1回鳴らすと解除される（無音の短いバッファ）
-      const src = c.createBufferSource(); src.buffer = c.createBuffer(1, 1, 22050); src.connect(c.destination); src.start(0);
-      if (c.state === 'running') { off(); return; }
-      c.resume().then(() => { if (c.state === 'running') off(); }).catch(() => {});
-    } catch { /* 無視 */ }
-  }
-  evs.forEach(e => document.addEventListener(e, unlock, true));
+  unlockOnGesture();
 }

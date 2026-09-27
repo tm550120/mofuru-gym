@@ -19,6 +19,7 @@ describe('parseFeature（保存値 → 試験機能のオン／オフ）', () =>
 describe('isFeatureId', () => {
   const tests: Record<string, { args: { s: string | undefined }; expected: { want: boolean } }> = {
     'success: sound は試験機能': { args: { s: 'sound' }, expected: { want: true } },
+    'success: bgm は試験機能': { args: { s: 'bgm' }, expected: { want: true } },
     'success: 登録されていない名前は試験機能ではない': { args: { s: 'music' }, expected: { want: false } },
     'success: 未指定は試験機能ではない': { args: { s: undefined }, expected: { want: false } },
   };
@@ -57,6 +58,36 @@ describe('試験機能の保存と読み込み', () => {
       expect(ls.getItem(featureKey('sound'))).toBe(tt.expected.saved);
     });
   }
+
+  describe('BGM（bgm）', () => {
+    type bsetup = { stored: Record<string, string> };
+    type bargs = { set: boolean | null };
+    type bexpected = { on: boolean; saved: string | null; sound: boolean };
+    const tests: Record<string, { args: bargs; setup: bsetup; expected: bexpected }> = {
+      'success: 何も保存されていなければオフ（初期値）': {
+        args: { set: null }, setup: { stored: {} }, expected: { on: false, saved: null, sound: false },
+      },
+      'success: オンにすると端末に保存され、効果音の試験機能は変わらない': {
+        args: { set: true }, setup: { stored: {} }, expected: { on: true, saved: '1', sound: false },
+      },
+      'success: オフに戻すと保存される': {
+        args: { set: false }, setup: { stored: { 'mofuru-feature-bgm': '1', 'mofuru-feature-sound': '1' } }, expected: { on: false, saved: '0', sound: true },
+      },
+      'success: ユーザーの BGM 設定（mofuru-bgm）とは別に保存する': {
+        args: { set: null }, setup: { stored: { 'mofuru-bgm': '1' } }, expected: { on: false, saved: null, sound: false },
+      },
+    };
+    for (const [name, tt] of Object.entries(tests)) {
+      it(name, () => {
+        const ls = fakeStorage(tt.setup.stored);
+        vi.stubGlobal('localStorage', ls);
+        if (tt.args.set !== null) setFeature('bgm', tt.args.set);
+        expect(isFeatureOn('bgm')).toBe(tt.expected.on);
+        expect(ls.getItem(featureKey('bgm'))).toBe(tt.expected.saved);
+        expect(isFeatureOn('sound')).toBe(tt.expected.sound);
+      });
+    }
+  });
 
   it('success: localStorage が使えなくても落ちずにオフ扱い', () => {
     const broken = fakeStorage({});

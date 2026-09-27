@@ -1,8 +1,9 @@
 /* タイトル画面・モード選択・ヘッダーのボタン */
 import { newGame, resumeCpuGame } from '../app/session';
 import { SAVE_CPU, loadCpuSave, loadGuestSave, loadHostSave } from '../app/save';
-import { setCpuOrder, setSound, setSpeed, settings } from '../app/settings';
+import { setBgm, setCpuOrder, setSound, setSpeed, settings } from '../app/settings';
 import { app, isOnline } from '../app/state';
+import { refreshBgm } from '../audio/bgm';
 import { applyFeatureVisibility } from '../features';
 import { COLORS, ICON, SQ3, TILE } from '../game/constants';
 import { cpuSeq } from '../game/rules';
@@ -11,6 +12,7 @@ import { Net } from '../net/online';
 import { store } from '../storage';
 import { house, monSVG } from './art';
 import { $ } from './dom';
+import { syncMusic } from './music';
 import { resetLocalUI } from './render';
 
 export type TitlePanel = 'menu' | 'cpu' | 'online' | 'lobby';
@@ -38,13 +40,14 @@ export function goTitle(): void {
   ['dlgBg', 'helpBg'].forEach(id => $('#' + id).classList.remove('show'));
   showTitle('menu');
 }
-export function hideTitle(): void { $('#title').classList.remove('show'); }
+export function hideTitle(): void { $('#title').classList.remove('show'); syncMusic(); }
 export function showTitle(panel: TitlePanel): void {
   $('#title').classList.add('show'); $('#title').classList.toggle('compact', panel !== 'menu');
   $('#tMenu').hidden = panel !== 'menu'; $('#tCpu').hidden = panel !== 'cpu'; $('#tOnline').hidden = panel !== 'online'; $('#tLobby').hidden = panel !== 'lobby';
   if (panel !== 'lobby') $('#tNote2').textContent = '';
   if (panel === 'menu') refreshTitle();
   if (panel === 'cpu') renderSegs();
+  syncMusic();
 }
 /** 続きから／再開ボタンの表示 */
 export function refreshTitle(): void {
@@ -54,11 +57,14 @@ export function refreshTitle(): void {
   $('#resumeGuestBtn').hidden = !g; if (g) $('#resumeGuestInfo').textContent = `部屋 ${g.code} に再接続します`;
   $('#modeCpu').classList.toggle('pri', !c && !h && !g);
 }
-/** 進行スピード・手番・効果音の選択ボタンの表示 */
+/** 進行スピード・手番・効果音・BGM の選択ボタンの表示 */
 function renderSegs(): void {
   document.querySelectorAll<HTMLButtonElement>('.soundSeg button').forEach(b => b.classList.toggle('sel', (b.dataset.sound === 'on') === settings.sound));
   const sb = $('#soundBtn'); sb.textContent = settings.sound ? '🔊' : '🔇';
   sb.setAttribute('aria-label', settings.sound ? '効果音：オン（タップでオフ）' : '効果音：オフ（タップでオン）'); sb.setAttribute('aria-pressed', String(settings.sound));
+  document.querySelectorAll<HTMLButtonElement>('.bgmSeg button').forEach(b => b.classList.toggle('sel', (b.dataset.bgm === 'on') === settings.bgm));
+  const mb = $('#bgmBtn'); mb.textContent = '🎵'; mb.classList.toggle('muted', !settings.bgm);
+  mb.setAttribute('aria-label', settings.bgm ? 'BGM：オン（タップでオフ）' : 'BGM：オフ（タップでオン）'); mb.setAttribute('aria-pressed', String(settings.bgm));
   document.querySelectorAll<HTMLButtonElement>('.speedSeg button').forEach(b => b.classList.toggle('sel', b.dataset.speed === settings.speed));
   $('#orderSeg').querySelectorAll<HTMLButtonElement>('button').forEach(b => b.classList.toggle('sel', b.dataset.o === settings.cpuOrder));
 }
@@ -95,6 +101,10 @@ export function initTitle(): void {
     const b = (e.target as Element).closest<HTMLButtonElement>('button[data-sound]'); if (!b) return; setSound(b.dataset.sound === 'on'); renderSegs();
   }));
   $('#soundBtn').onclick = () => { setSound(!settings.sound); renderSegs(); };
+  document.querySelectorAll('.bgmSeg').forEach(el => el.addEventListener('click', e => {
+    const b = (e.target as Element).closest<HTMLButtonElement>('button[data-bgm]'); if (!b) return; setBgm(b.dataset.bgm === 'on'); renderSegs(); refreshBgm();
+  }));
+  $('#bgmBtn').onclick = () => { setBgm(!settings.bgm); renderSegs(); refreshBgm(); };
   $('#orderSeg').addEventListener('click', e => {
     const b = (e.target as Element).closest<HTMLButtonElement>('button[data-o]'); if (!b) return; setCpuOrder(b.dataset.o); renderSegs();
   });

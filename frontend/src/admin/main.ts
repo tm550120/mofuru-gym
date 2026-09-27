@@ -1,10 +1,12 @@
-/* 管理ページ（admin.html）：試験機能の切り替え・効果音と演出のテスト・データの削除。
+/* 管理ページ（admin.html）：試験機能の切り替え・効果音／BGM と演出のテスト・データの削除。
  * ゲーム画面からはリンクしない。アクセスキーはブラウザ内だけの簡易ロック（accessKey.ts 参照）。 */
 import '../style.css';
 import './admin.css';
 import { SAVE_CPU, SAVE_GUEST, SAVE_HOST } from '../app/save';
 import { SETTING_KEYS } from '../app/settings';
 import { app } from '../app/state';
+import { previewBgm } from '../audio/bgm';
+import { SONGS, type TrackId } from '../audio/bgm/songs';
 import type { BattleSound } from '../audio/outcome';
 import { initAudioUnlock, setSoundPreview, sfxBattleStart, sfxDiceTick, sfxResult } from '../audio/sfx';
 import { FEATURES, isFeatureId, isFeatureOn, setFeature } from '../features';
@@ -66,6 +68,15 @@ function playSfx(kind: string | undefined): void {
   else if (kind === 'win' || kind === 'lose' || kind === 'watch') sfxResult(kind);
 }
 
+/* ---- BGMテスト（ボタンを押したときだけ流す。ページを開いただけでは流さない） ---- */
+const TRACK_JA: Record<TrackId, string> = { title: 'タイトル', game: 'ゲーム', battle: 'バトル' };
+const isTrack = (s: string | undefined): s is TrackId => !!s && Object.prototype.hasOwnProperty.call(SONGS, s);
+function playBgm(k: string | undefined): void {
+  const id = isTrack(k) ? k : null;
+  previewBgm(id);
+  $('#bgmNow').textContent = id ? `再生中：${TRACK_JA[id]}（${SONGS[id].bpm} BPM）` : '停止中';
+}
+
 /* ---- 演出テスト：実際の showBattle をダミーの盤面で再生する ---- */
 let demoId = 0;
 function playDemo(kind: BattleSound): void {
@@ -81,7 +92,7 @@ const CLEAR: Record<string, { text: string; run: () => void; done: string }> = {
     done: '保存データを削除しました',
   },
   settings: {
-    text: '設定（進行スピード・手番・効果音のオン／オフ）を初期値に戻します。よろしいですか？',
+    text: '設定（進行スピード・手番・効果音・BGMのオン／オフ）を初期値に戻します。よろしいですか？',
     run: () => SETTING_KEYS.forEach(k => store.del(k)),
     done: '設定を初期化しました',
   },
@@ -105,7 +116,7 @@ function init(): void {
   initAudioUnlock();
 
   $('#gate').addEventListener('submit', e => { e.preventDefault(); void tryUnlock(); });
-  $('#lockBtn').onclick = () => { session.set(false); showPanel(false); $('#keyIn').focus(); };
+  $('#lockBtn').onclick = () => { playBgm('stop'); session.set(false); showPanel(false); $('#keyIn').focus(); };
 
   $('#featList').addEventListener('click', e => {
     const b = (e.target as Element).closest<HTMLButtonElement>('button[data-on]'); if (!b) return;
@@ -115,6 +126,9 @@ function init(): void {
   });
   $('#sfxBtns').addEventListener('click', e => {
     const b = (e.target as Element).closest<HTMLButtonElement>('button[data-sfx]'); if (b) playSfx(b.dataset.sfx);
+  });
+  $('#bgmBtns').addEventListener('click', e => {
+    const b = (e.target as Element).closest<HTMLButtonElement>('button[data-bgm]'); if (b) playBgm(b.dataset.bgm);
   });
   $('#demoBtns').addEventListener('click', e => {
     const b = (e.target as Element).closest<HTMLButtonElement>('button[data-demo]'); if (!b) return;
