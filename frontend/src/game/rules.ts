@@ -2,7 +2,7 @@
 import { makeBoard } from './board';
 import { COLORS, COST, GOAL, ICON, MON_NAME, RES, TYPE_JA } from './constants';
 import { defaultRng, die, shuffle } from './random';
-import type { BuildKind, Bundle, GameState, Mon, OfferTarget, Player, Resource, Rng, Seat } from './types';
+import type { BuildKind, Bundle, GameState, Mon, OfferTarget, Player, Resource, Resources, Rng, Seat } from './types';
 
 export const monName = (m: Mon | undefined): string => MON_NAME[m || 'none'];
 
@@ -12,6 +12,9 @@ export function log(g: GameState, t: string): void { g.log.unshift(t); g.log = g
 /** 資源の組を「🌲×2🧱」のような表示にする */
 export const fmtRes = (o: Bundle | null | undefined): string => RES.filter(r => o && o[r]).map(r => ICON[r] + (o![r]! > 1 ? '×' + o![r] : '')).join('') || 'なし';
 export const sumRes = (o: Bundle | null | undefined): number => RES.reduce((s, r) => s + ((o && o[r]) || 0), 0);
+/** 手札 res から give を出して get をもらったあとの枚数（表示用。足りなければ負になる＝足りない印） */
+export const resAfter = (res: Resources, give: Bundle | null | undefined, get: Bundle | null | undefined): Resources =>
+  Object.fromEntries(RES.map(r => [r, res[r] - ((give && give[r]) || 0) + ((get && get[r]) || 0)])) as Resources;
 
 /** 手番の順が席番号の並べ替えになっていれば true */
 const isPermutation = (seq: readonly number[] | undefined, n: number): seq is number[] =>
