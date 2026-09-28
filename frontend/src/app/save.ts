@@ -35,7 +35,13 @@ export function loadHostSave(): HostSave | null {
   const s = loadJSON<HostSave>(SAVE_HOST);
   return s && s.v === SAVE_VERSION && s.G && s.code ? s : null;
 }
+/** ゲストの保存はこの時間を過ぎたら使わない（終わった部屋の「戻る」がずっと残らないように） */
+export const GUEST_SAVE_TTL_MS = 12 * 60 * 60 * 1000;
+/** ゲストの保存が「オンライン対戦に戻る」に使えるか */
+export function isUsableGuestSave(s: GuestSave | null, now: number): s is GuestSave {
+  return !!s && !!s.code && !!s.token && typeof s.at === 'number' && now - s.at < GUEST_SAVE_TTL_MS;
+}
 export function loadGuestSave(): GuestSave | null {
   const s = loadJSON<GuestSave>(SAVE_GUEST);
-  return s && s.code && s.token ? s : null;
+  return isUsableGuestSave(s, Date.now()) ? s : null;
 }

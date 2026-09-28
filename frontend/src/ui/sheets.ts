@@ -2,8 +2,8 @@
 import { doAction, myTurn } from '../app/session';
 import { app } from '../app/state';
 import { BEATS, ICON, JA, RES, TYPE_JA, isResource } from '../game/constants';
-import { canEvolve, fmtRes, hasRes, isCpu, monName, sumRes, total } from '../game/rules';
-import type { Bundle, OfferTarget, Resource } from '../game/types';
+import { canEvolve, fmtRes, hasRes, isCpu, monName, resAfter, sumRes, total } from '../game/rules';
+import type { Bundle, OfferTarget, Resource, Resources } from '../game/types';
 import { monSVG } from './art';
 import { $, esc } from './dom';
 
@@ -23,6 +23,21 @@ function stepClick(e: Event, counts: Bundle, max: (r: Resource) => number, after
 /** 0枚の資源を除いた組 */
 const compact = (o: Bundle): Bundle => { const r: Bundle = {}; RES.forEach(k => { if (o[k]) r[k] = o[k]; }); return r; };
 
+/* ---------- 交換画面の「あなたの手札」：今の枚数と、交換したあとの枚数（→） ---------- */
+function handHTML(res: Resources, give: Bundle | null, get: Bundle | null): string {
+  const after = resAfter(res, give, get);
+  const changed = RES.some(r => after[r] !== res[r]);
+  const cells = RES.map(r => {
+    const a = after[r], d = a - res[r];
+    const cls = a < 0 ? 'short' : d > 0 ? 'up' : d < 0 ? 'down' : '';
+    const sub = a < 0 ? `不足${-a}` : d ? `→${a}` : '';
+    const label = `${JA[r]} ${res[r]}枚` + (a < 0 ? `（${-a}枚足りない）` : d ? `（交換後${a}枚）` : '');
+    return `<div class="mr ${cls}" role="img" aria-label="${label}"><span class="ic" aria-hidden="true">${ICON[r]}</span><b aria-hidden="true">${res[r]}</b><small aria-hidden="true">${sub}</small></div>`;
+  }).join('');
+  const n = RES.reduce((s, r) => s + res[r], 0);
+  return `<div class="lbl">あなたの手札（${n}枚）${changed ? '　→ は交換後の枚数' : ''}</div><div class="mrs">${cells}</div>`;
+}
+
 /* ---------- trade ---------- */
 type TradeTab = 'player' | 'bank';
 let tTab: TradeTab = 'player', tGive: Resource | null = null, tGet: Resource | null = null;
@@ -34,6 +49,9 @@ export function openTrade(): void {
 function renderTrade(): void {
   const G = app.G!, ME = app.me, me = G.players[ME];
   $('#tTabs').querySelectorAll<HTMLButtonElement>('button').forEach(b => b.classList.toggle('sel', b.dataset.tab === tTab));
+  $('#tHand').innerHTML = tTab === 'bank'
+    ? handHTML(me.res, tGive && tGet ? { [tGive]: 4 } : null, tGive && tGet ? { [tGet]: 1 } : null)
+    : handHTML(me.res, pGive, pWant);
   $('#tBank').hidden = tTab !== 'bank'; $('#tPlayer').hidden = tTab !== 'player';
   $('#give').innerHTML = RES.map(r => `<button data-r="${r}" class="${tGive === r ? 'sel' : ''}" ${me.res[r] < 4 ? 'disabled' : ''}><span class="ic">${ICON[r]}</span>${me.res[r]}枚</button>`).join('');
   $('#get').innerHTML = RES.map(r => `<button data-r="${r}" class="${tGet === r ? 'sel' : ''}" ${r === tGive ? 'disabled' : ''}><span class="ic">${ICON[r]}</span>${JA[r]}</button>`).join('');
@@ -58,12 +76,14 @@ export function renderOffer(): void {
   if (mine) {
     $('#oTitle').textContent = '🤝 交換を提案中';
     $('#oBody').innerHTML = `<div class="obox">あなたが出す：<span class="big2">${fmtRes(o.give)}</span><br>あなたがほしい：<span class="big2">${fmtRes(o.want)}</span></div>
+      ${handHTML(G.players[ME].res, o.give, o.want)}
       <ul class="olist">${Object.keys(o.resp).map(i => `<li><span>${esc(G.players[+i].name)}</span><b>${o.resp[+i] === 'decline' ? '断った' : '考え中…'}</b></li>`).join('')}</ul>`;
     btn('提案を取り下げる', false, app.pending, () => doAction({ t: 'cancelOffer' }));
   } else {
     const f = G.players[o.from], can = hasRes(G, ME, o.want);
     $('#oTitle').textContent = `🤝 ${f.name}から交換の提案`;
     $('#oBody').innerHTML = `<div class="obox">あなたがもらう：<span class="big2">${fmtRes(o.give)}</span><br>あなたが渡す：<span class="big2">${fmtRes(o.want)}</span></div>
+      ${handHTML(G.players[ME].res, o.want, o.give)}
       <p class="tinfo">${can ? '受けるとすぐに交換されます。' : '渡す資源が足りないので受けられません。'}${o.to === 'all' ? '（全員への提案：先に受けた人と成立）' : ''}</p>`;
     btn('断る', false, app.pending, () => doAction({ t: 'respond', ok: false }));
     btn('受ける', true, app.pending || !can, () => doAction({ t: 'respond', ok: true }));

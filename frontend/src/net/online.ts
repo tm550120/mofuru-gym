@@ -53,7 +53,7 @@ async function load(): Promise<PeerCtor> {
 const send = (c: DataConnection | null, m: GuestMessage | HostMessage): void => { try { if (c && c.open) void c.send(m); } catch { /* 送れなくても続行 */ } };
 function errText(e: PeerErr | undefined): string {
   const t = e && e.type;
-  if (t === 'peer-unavailable') return '部屋が見つかりません。コードを確かめてください。';
+  if (t === 'peer-unavailable') return '部屋が見つかりません。コードが合っているか、ホストが部屋の画面を開いたままか確かめてください。';
   if (t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed') return '接続サーバーにつながりません。通信環境を確認してください。';
   if (t === 'browser-incompatible') return 'このブラウザはオンライン対戦に対応していません。';
   return 'オンライン接続でエラーが起きました（' + (t || (e && e.message) || '不明') + '）';
@@ -292,7 +292,11 @@ function connect(isRc: boolean): void {
   p.on('error', (e: PeerErr) => {
     if (peer !== p) return;
     if (isRc) { if (!alive) retry(); return; }
-    if (!alive) { note(errText(e)); stopAll(); app.mode = null; showTitle('online'); }
+    if (!alive) {
+      /* 保存していた部屋がもう無い：「オンライン対戦に戻る」に古い部屋が残り続けないよう消す */
+      if (e.type === 'peer-unavailable') { const s = loadGuestSave(); if (s && s.code === code) store.del(SAVE_GUEST); }
+      note(errText(e)); stopAll(); app.mode = null; showTitle('online');
+    }
     else console.warn('peer error', e);
   });
 }
@@ -318,6 +322,7 @@ function onGuestData(raw: unknown): void {
       const ng = d.G; if (!ng || !ng.players) return;
       const fresh = !app.G || app.G.gid !== ng.gid;
       app.G = ng; if (fresh) { adoptLoaded(); hideTitle(); }
+      if (ng.phase === 'over') store.del(SAVE_GUEST); // 終わった対戦には戻らない
       app.pending = false; render(); break;
     }
     case 'end': { const r = d.reason || 'ゲームが終了しました。'; store.del(SAVE_GUEST); stopAll(); app.mode = null; goTitle(); dialog('対戦終了', r, [{ label: 'OK', pri: true }]); break; }

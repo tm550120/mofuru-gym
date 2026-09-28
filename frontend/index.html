@@ -38,6 +38,7 @@
 
 <div class="sheet-bg" id="tradeBg"><div class="sheet">
   <div class="seg" id="tTabs"><button data-tab="player">🤝 プレイヤーと交換</button><button data-tab="bank">🏦 銀行と交換</button></div>
+  <div id="tHand"></div>
   <div id="tBank">
     <div class="lbl">出す資源（同じものを4枚）</div><div class="pick" id="give"></div>
     <div class="lbl">もらう資源（1枚）</div><div class="pick" id="get"></div>
@@ -165,7 +166,7 @@
       <button class="tbtn pri" id="hostBtn">部屋を作ってフレンドを招待</button>
       <div class="or">— または —</div>
       <h3>部屋に参加する</h3>
-      <input class="field code-in" id="codeIn" maxlength="5" autocomplete="off" autocapitalize="characters" placeholder="部屋コード（5文字）">
+      <input class="field code-in" id="codeIn" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" inputmode="text" enterkeyhint="go" placeholder="部屋コード（5文字）">
       <button class="tbtn" id="joinBtn">参加する</button>
     </div>
     <p class="tnote" id="tNote1"></p>
