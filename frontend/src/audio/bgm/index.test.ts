@@ -45,7 +45,7 @@ describe('BGM の起動（試験機能・ユーザー設定による抑止）', 
     'success: 試験機能が未設定（初期値）ならリスナーも AudioContext も作らない': {
       setup: { stored: {} }, expected: { listeners: [], ctx: 0, played: false },
     },
-    'success: 効果音の試験機能だけオンでも BGM は流さない': {
+    'success: 古い効果音の試験機能のキー（mofuru-feature-sound）が残っていても BGM は流さない': {
       setup: { stored: { 'mofuru-feature-sound': '1', 'mofuru-bgm': '1' } }, expected: { listeners: [], ctx: 0, played: false },
     },
     'success: 試験機能オンでも BGM オフなら流さない': {

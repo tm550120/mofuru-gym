@@ -1,4 +1,4 @@
-/* 管理ページ（admin.html）：試験機能の切り替え・効果音／BGM と演出のテスト・データの削除。
+/* 管理ページ（admin.html）：試験機能（BGM）の切り替え・効果音／BGM と演出のテスト・データの削除。
  * ゲーム画面からはリンクしない。アクセスキーはブラウザ内だけの簡易ロック（accessKey.ts 参照）。 */
 import '../style.css';
 import './admin.css';
@@ -9,7 +9,7 @@ import { previewBgm } from '../audio/bgm';
 import { SONGS, type TrackId } from '../audio/bgm/songs';
 import type { BattleSound } from '../audio/outcome';
 import { initAudioUnlock, setSoundPreview, sfxBattleStart, sfxDiceTick, sfxResult } from '../audio/sfx';
-import { FEATURES, isFeatureId, isFeatureOn, setFeature } from '../features';
+import { clearRetiredFeatures, FEATURES, isFeatureId, isFeatureOn, setFeature } from '../features';
 import { store } from '../storage';
 import { showBattle } from '../ui/battle';
 import { $, esc } from '../ui/dom';
@@ -111,7 +111,8 @@ function closeConfirm(): void { pending = null; $('#dataBtns').hidden = false; $
 
 /* ---- 初期化 ---- */
 function init(): void {
-  // 管理ページはテスト台：試験機能の設定に関係なく効果音を鳴らす
+  clearRetiredFeatures();
+  // 管理ページはテスト台：ユーザー設定に関係なく効果音を鳴らす
   setSoundPreview(true);
   initAudioUnlock();
 

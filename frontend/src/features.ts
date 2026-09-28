@@ -4,7 +4,6 @@
 import { store } from './storage';
 
 export const FEATURES = [
-  { id: 'sound', name: '効果音', desc: 'ジムバトルの効果音（開始・サイコロ・勝ち／負け・観戦）と、そのオン／オフボタン' },
   { id: 'bgm', name: 'BGM', desc: '場面ごとのBGM（タイトル・ゲーム中・ジムバトル）と、そのオン／オフボタン' },
 ] as const;
 
@@ -22,6 +21,12 @@ export const parseFeature = (s: string): boolean => s === '1';
 export function isFeatureOn(id: FeatureId): boolean { return parseFeature(store.get(featureKey(id))); }
 
 export function setFeature(id: FeatureId, on: boolean): void { store.set(featureKey(id), on ? '1' : '0'); }
+
+/** 正式公開して試験機能ではなくなったもののキー（効果音は正式機能になった）。残っていても使わない */
+export const RETIRED_FEATURE_KEYS = ['mofuru-feature-sound'] as const;
+
+/** 使わなくなった試験機能のキーを端末から消す（無くても・消せなくても何もしない） */
+export function clearRetiredFeatures(): void { RETIRED_FEATURE_KEYS.forEach(k => store.del(k)); }
 
 /** data-feature="<id>" の要素を、その試験機能がオンのときだけ表示する */
 export function applyFeatureVisibility(root: ParentNode = document): void {

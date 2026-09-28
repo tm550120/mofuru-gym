@@ -5,16 +5,15 @@ import { soundAllowed } from './sfx';
 afterEach(() => { vi.unstubAllGlobals(); });
 
 describe('soundAllowed（効果音を鳴らしてよいか）', () => {
-  type args = { feature: boolean; userOn: boolean; preview: boolean };
+  type args = { userOn: boolean; preview: boolean };
   const tests: Record<string, { args: args; expected: { want: boolean } }> = {
-    'success: 試験機能オン・効果音オンなら鳴らす': { args: { feature: true, userOn: true, preview: false }, expected: { want: true } },
-    'success: 試験機能オフなら効果音オンでも鳴らさない': { args: { feature: false, userOn: true, preview: false }, expected: { want: false } },
-    'success: 試験機能オンでも効果音オフなら鳴らさない': { args: { feature: true, userOn: false, preview: false }, expected: { want: false } },
-    'success: どちらもオフなら鳴らさない': { args: { feature: false, userOn: false, preview: false }, expected: { want: false } },
-    'success: 管理ページのプレビュー中は設定に関係なく鳴らす': { args: { feature: false, userOn: false, preview: true }, expected: { want: true } },
+    'success: 効果音オンなら鳴らす': { args: { userOn: true, preview: false }, expected: { want: true } },
+    'success: 効果音オフなら鳴らさない': { args: { userOn: false, preview: false }, expected: { want: false } },
+    'success: 管理ページのプレビュー中は効果音オフでも鳴らす': { args: { userOn: false, preview: true }, expected: { want: true } },
+    'success: プレビュー中で効果音オンでも鳴らす': { args: { userOn: true, preview: true }, expected: { want: true } },
   };
   for (const [name, tt] of Object.entries(tests)) {
-    it(name, () => { expect(soundAllowed(tt.args.feature, tt.args.userOn, tt.args.preview)).toBe(tt.expected.want); });
+    it(name, () => { expect(soundAllowed(tt.args.userOn, tt.args.preview)).toBe(tt.expected.want); });
   }
 });
 
@@ -34,31 +33,34 @@ function fakeAudio() {
   return { count, FakeCtx };
 }
 
-describe('効果音の呼び出し（試験機能・ユーザー設定による抑止）', () => {
-  type setup = { stored: Record<string, string>; preview: boolean };
+describe('効果音の呼び出し（ユーザー設定による抑止）', () => {
+  type setup = { stored: Record<string, string>; preview: boolean; gesture: boolean };
   type expected = { ctx: number; played: boolean; listeners: number };
-  const on = { 'mofuru-feature-sound': '1' };
   const tests: Record<string, { setup: setup; expected: expected }> = {
-    'success: 試験機能オン・効果音オンなら AudioContext を1つ作って鳴らす': {
-      setup: { stored: { ...on }, preview: false }, expected: { ctx: 1, played: true, listeners: 3 },
+    'success: 効果音が未設定（初期値オン）なら、最初の操作のあとに AudioContext を1つ作って鳴らす': {
+      setup: { stored: {}, preview: false, gesture: true }, expected: { ctx: 1, played: true, listeners: 3 },
     },
-    'success: 試験機能が未設定（初期値）なら鳴らさず AudioContext も作らない': {
-      setup: { stored: {}, preview: false }, expected: { ctx: 0, played: false, listeners: 0 },
+    'success: 最初のユーザー操作の前は鳴らさず AudioContext も作らない': {
+      setup: { stored: {}, preview: false, gesture: false }, expected: { ctx: 0, played: false, listeners: 3 },
     },
-    'success: 試験機能オフならユーザー設定がオンでも鳴らさない': {
-      setup: { stored: { 'mofuru-feature-sound': '0', 'mofuru-sound': '1' }, preview: false }, expected: { ctx: 0, played: false, listeners: 0 },
+    'success: 効果音オンなら鳴らす': {
+      setup: { stored: { 'mofuru-sound': '1' }, preview: false, gesture: true }, expected: { ctx: 1, played: true, listeners: 3 },
     },
-    'success: 試験機能オンでも効果音オフなら鳴らさない（タップ時の準備だけ登録）': {
-      setup: { stored: { ...on, 'mofuru-sound': '0' }, preview: false }, expected: { ctx: 0, played: false, listeners: 3 },
+    'success: 効果音オフなら鳴らさず AudioContext も作らない（タップ時の準備だけ登録）': {
+      setup: { stored: { 'mofuru-sound': '0' }, preview: false, gesture: false }, expected: { ctx: 0, played: false, listeners: 3 },
     },
-    'success: 管理ページのプレビュー中は試験機能オフでも鳴らす': {
-      setup: { stored: {}, preview: true }, expected: { ctx: 1, played: true, listeners: 3 },
+    'success: 古い試験機能のキーがオフで残っていても効果音オンなら鳴らす': {
+      setup: { stored: { 'mofuru-feature-sound': '0', 'mofuru-sound': '1' }, preview: false, gesture: true }, expected: { ctx: 1, played: true, listeners: 3 },
+    },
+    'success: 管理ページのプレビュー中は効果音オフでも鳴らす': {
+      setup: { stored: { 'mofuru-sound': '0' }, preview: true, gesture: true }, expected: { ctx: 1, played: true, listeners: 3 },
     },
   };
   for (const [name, tt] of Object.entries(tests)) {
     it(name, async () => {
       const { count, FakeCtx } = fakeAudio();
-      const addEventListener = vi.fn();
+      const handlers = new Map<string, () => void>();
+      const addEventListener = vi.fn((e: string, f: () => void) => { handlers.set(e, f); });
       vi.stubGlobal('localStorage', fakeStorage(tt.setup.stored));
       vi.stubGlobal('window', { AudioContext: FakeCtx });
       vi.stubGlobal('document', { addEventListener, removeEventListener: vi.fn() });
@@ -66,6 +68,7 @@ describe('効果音の呼び出し（試験機能・ユーザー設定による�
       const m = await import('./sfx');
       m.setSoundPreview(tt.setup.preview);
       m.initAudioUnlock();
+      if (tt.setup.gesture) handlers.get('pointerdown')?.();
       m.sfxBattleStart(); m.sfxDiceTick(); m.sfxResult('win'); m.sfxResult('lose'); m.sfxResult('watch');
       expect(count.ctx).toBe(tt.expected.ctx);
       expect(count.osc > 0).toBe(tt.expected.played);
