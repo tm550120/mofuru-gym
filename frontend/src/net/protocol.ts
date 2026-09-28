@@ -20,6 +20,24 @@ export const RC_LIMIT_MS = 120000;
 
 export const genCode = (rng: () => number = Math.random): string =>
   [...Array(CODE_LENGTH)].map(() => CODE_ALPHABET[Math.floor(rng() * CODE_ALPHABET.length)]).join('');
+/**
+ * 入力・貼り付けされた文字列を部屋コードに整える。
+ * 全角→半角（NFKC）、招待リンク（?room=XXXXX）ならそのコードを取り出し、英大文字と数字だけにする。
+ * 5文字を超えたら後ろの5文字（＝あとから入力した分）を残す（前のコードが入ったままでも打ち直せるように）
+ */
+export function normalizeRoomCode(raw: string): string {
+  const s = String(raw || '').normalize('NFKC');
+  const m = s.match(/[?&]room=([A-Za-z0-9]+)/);
+  const c = (m ? m[1] : s).toUpperCase().replace(/[^A-Z0-9]/g, '');
+  return c.length > CODE_LENGTH ? c.slice(-CODE_LENGTH) : c;
+}
+/** 部屋コードとして使えなければ、その理由（日本語）を返す。使えれば null */
+export function roomCodeError(code: string): string | null {
+  if (code.length !== CODE_LENGTH) return `${CODE_LENGTH}文字の部屋コードを入力してください。`;
+  if (/[IO01]/.test(code)) return '部屋コードに I・O・0・1 は使われていません。見まちがいがないか確かめてください。';
+  if ([...code].some(ch => !CODE_ALPHABET.includes(ch))) return '部屋コードの文字が正しくありません。';
+  return null;
+}
 export const cleanName = (s: unknown): string => String(s || '').replace(/[<>&"'`\\\n\r\t]/g, '').trim().slice(0, 10) || 'ゲスト';
 export const hostPeerId = (code: string): string => PEER_PREFIX + code;
 /** 再接続用のトークン（同じ席に戻るための合言葉） */

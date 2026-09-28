@@ -9,6 +9,7 @@ import { COLORS, ICON, SQ3, TILE } from '../game/constants';
 import { cpuSeq } from '../game/rules';
 import type { TileType } from '../game/types';
 import { Net } from '../net/online';
+import { CODE_LENGTH, normalizeRoomCode, roomCodeError } from '../net/protocol';
 import { store } from '../storage';
 import { house, monSVG } from './art';
 import { $ } from './dom';
@@ -87,7 +88,6 @@ function drawTitle(): void {
 
 const NICK_KEY = 'mofuru-nick';
 const readNick = (): string => { const n = $<HTMLInputElement>('#nick').value.trim(); if (n) store.set(NICK_KEY, n); return n || 'ゲスト'; };
-const cleanCode = (s: string): string => s.toUpperCase().replace(/[^A-Z0-9]/g, '');
 
 export function initTitle(): void {
   /* header */
@@ -135,11 +135,31 @@ export function initTitle(): void {
   $('#onlineBack').onclick = () => showTitle('menu');
   $('#hostBtn').onclick = () => { void Net.host(readNick()); };
   $('#joinBtn').onclick = () => {
-    const c = cleanCode($<HTMLInputElement>('#codeIn').value);
-    if (c.length !== 5) { $('#tNote1').textContent = '5文字の部屋コードを入力してください。'; return; }
+    if (app.mode) return; // 接続中の二度押し
+    const inp = $<HTMLInputElement>('#codeIn');
+    const c = normalizeRoomCode(inp.value); inp.value = c;
+    const err = roomCodeError(c);
+    if (err) { $('#tNote1').textContent = err; return; }
     void Net.join(readNick(), c);
   };
-  $('#codeIn').addEventListener('input', e => { const t = e.target as HTMLInputElement; t.value = cleanCode(t.value); });
+  /* 入力中に整える（日本語入力の変換中は触らない。変換が終わってから整える）。
+     前のコードで埋まった欄に打ち足したときは、打った文字から入れ直す（5文字で止まって打てなくならないように） */
+  const codeIn = $<HTMLInputElement>('#codeIn');
+  const fixCode = (typed: string | null): void => {
+    let v = normalizeRoomCode(codeIn.value);
+    if (codeIn.value.replace(/\s/g, '').length > CODE_LENGTH && typed) { const t = normalizeRoomCode(typed); if (t) v = t; }
+    if (v !== codeIn.value) codeIn.value = v;
+  };
+  codeIn.addEventListener('input', e => { const ie = e as InputEvent; if (!ie.isComposing) fixCode(ie.data); });
+  codeIn.addEventListener('compositionend', e => fixCode(e.data));
+  /* 貼り付けは中身から部屋コードを取り出す（招待リンクや共有メッセージ全体でもよい） */
+  codeIn.addEventListener('paste', e => {
+    const c = normalizeRoomCode(e.clipboardData?.getData('text') || '');
+    if (c) { e.preventDefault(); codeIn.value = c; }
+  });
+  /* タップしたら全選択して、そのまま打ち直せるようにする */
+  codeIn.addEventListener('focus', () => { setTimeout(() => { if (document.activeElement === codeIn) codeIn.select(); }, 0); });
+  codeIn.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) $('#joinBtn').click(); });
   $('#lFill').onchange = () => Net.lobbyChanged();
   $('#lOrder').addEventListener('click', e => { const b = (e.target as Element).closest<HTMLButtonElement>('button[data-o]'); if (b && !b.disabled) Net.setOrderMode(b.dataset.o); });
   $('#lList').addEventListener('click', e => { const b = (e.target as Element).closest<HTMLButtonElement>('button.up'); if (b) Net.moveUp(+(b.dataset.k || 0)); });
@@ -159,7 +179,9 @@ export function initTitle(): void {
   $<HTMLInputElement>('#nick').value = store.get(NICK_KEY);
   const room = new URLSearchParams(location.search).get('room');
   if (room) {
-    $<HTMLInputElement>('#codeIn').value = cleanCode(room).slice(0, 5);
+    $<HTMLInputElement>('#codeIn').value = normalizeRoomCode(room);
+    /* リロードや別の部屋に入り直すときに古いコードが残らないよう、アドレスバーから ?room= を外す */
+    try { history.replaceState(null, '', location.pathname + location.hash); } catch { /* ignore */ }
     showTitle('online');
     $('#tNote1').textContent = '招待リンクから開きました。ニックネームを入れて「参加する」を押してください。';
   } else showTitle('menu');
