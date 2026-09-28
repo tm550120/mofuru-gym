@@ -1,4 +1,4 @@
-/* 画面の状態から場面を決めて BGM に伝える（BGM の試験機能がオフなら setBgmScene が何もしない） */
+/* 画面の状態から場面を決めて BGM に伝える */
 import { app } from '../app/state';
 import { setBgmScene } from '../audio/bgm';
 import { sceneOf } from '../audio/bgm/scene';

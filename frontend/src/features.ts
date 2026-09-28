@@ -1,14 +1,15 @@
 /* 試験機能（フィーチャーフラグ）
  * 管理ページ（admin.html）から端末ごとにオン／オフする。初期値はすべてオフで、
- * 一般のプレイヤーには試験機能が見えない（オフのときは origin の main と同じ見た目・動き）。 */
+ * 一般のプレイヤーには試験機能が見えない（オフのときは origin の main と同じ見た目・動き）。
+ * 今後の試験のために仕組みは残している（いまは試験中の機能は無い）。 */
 import { store } from './storage';
 
-export const FEATURES = [
-  { id: 'sound', name: '効果音', desc: 'ジムバトルの効果音（開始・サイコロ・勝ち／負け・観戦）と、そのオン／オフボタン' },
-  { id: 'bgm', name: 'BGM', desc: '場面ごとのBGM（タイトル・ゲーム中・ジムバトル）と、そのオン／オフボタン' },
-] as const;
+export type Feature = { readonly id: string; readonly name: string; readonly desc: string };
 
-export type FeatureId = (typeof FEATURES)[number]['id'];
+/** 試験中の機能の一覧（例：{ id: 'xxx', name: '機能名', desc: '説明' }） */
+export const FEATURES: readonly Feature[] = [];
+
+export type FeatureId = Feature['id'];
 
 export const isFeatureId = (s: string | undefined): s is FeatureId => FEATURES.some(f => f.id === s);
 
@@ -22,6 +23,12 @@ export const parseFeature = (s: string): boolean => s === '1';
 export function isFeatureOn(id: FeatureId): boolean { return parseFeature(store.get(featureKey(id))); }
 
 export function setFeature(id: FeatureId, on: boolean): void { store.set(featureKey(id), on ? '1' : '0'); }
+
+/** 正式公開して試験機能ではなくなったもののキー（効果音・BGM は正式機能になった）。残っていても使わない */
+export const RETIRED_FEATURE_KEYS = ['mofuru-feature-sound', 'mofuru-feature-bgm'] as const;
+
+/** 使わなくなった試験機能のキーを端末から消す（無くても・消せなくても何もしない） */
+export function clearRetiredFeatures(): void { RETIRED_FEATURE_KEYS.forEach(k => store.del(k)); }
 
 /** data-feature="<id>" の要素を、その試験機能がオンのときだけ表示する */
 export function applyFeatureVisibility(root: ParentNode = document): void {

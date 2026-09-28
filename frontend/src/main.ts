@@ -2,6 +2,7 @@ import './style.css';
 import { hooks } from './app/session';
 import { initBgm } from './audio/bgm';
 import { initAudioUnlock } from './audio/sfx';
+import { clearRetiredFeatures } from './features';
 import { Net } from './net/online';
 import { waitBattleClosed } from './ui/battle';
 import { initBoard } from './ui/board';
@@ -19,6 +20,7 @@ hooks.resetLocalUI = resetLocalUI;
 hooks.adoptLoaded = adoptLoaded;
 hooks.waitBattleClosed = waitBattleClosed;
 
+clearRetiredFeatures();
 initAudioUnlock();
 initBgm();
 initBoard();

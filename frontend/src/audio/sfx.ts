@@ -1,24 +1,24 @@
 /* 効果音（Web Audio API で合成。音声ファイルは使わない）
- * 試験機能（features.ts の 'sound'）がオフの端末では一切鳴らさず、AudioContext も作らない。
+ * ユーザー設定（settings.sound、初期値オン）がオフなら鳴らさない。AudioContext は最初のユーザー操作まで作らない。
  * AudioContext は BGM と共有（context.ts）。使えない環境では何もしない（例外を投げない）。 */
 import { settings } from '../app/settings';
-import { isFeatureOn } from '../features';
-import { bus, duckBgm, getCtx, resumeCtx, unlockOnGesture } from './context';
+import { bus, duckBgm, gestureDone, getCtx, resumeCtx, unlockOnGesture } from './context';
 import type { BattleSound } from './outcome';
 
 let preview = false;
-/** 管理ページ（テスト台）用：試験機能・ユーザー設定に関係なく鳴らす */
+/** 管理ページ（テスト台）用：ユーザー設定に関係なく鳴らす */
 export function setSoundPreview(on: boolean): void { preview = on; }
 
-/** 効果音を鳴らしてよいか：試験機能がオンかつユーザー設定がオン。管理ページのプレビュー中は常に鳴らす */
-export const soundAllowed = (feature: boolean, userOn: boolean, previewOn: boolean): boolean => previewOn || (feature && userOn);
+/** 効果音を鳴らしてよいか：ユーザー設定がオン。管理ページのプレビュー中は常に鳴らす */
+export const soundAllowed = (userOn: boolean, previewOn: boolean): boolean => previewOn || userOn;
 
 /** いまこの端末で効果音を鳴らしてよいか */
-export const canPlaySound = (): boolean => soundAllowed(isFeatureOn('sound'), settings.sound, preview);
+export const canPlaySound = (): boolean => soundAllowed(settings.sound, preview);
 
-/** 鳴らせる状態の AudioContext（鳴らさない設定・使えない・閉じているなら null） */
+/** 鳴らせる状態の AudioContext（鳴らさない設定・まだユーザー操作が無い・使えない・閉じているなら null） */
 function ready(): AudioContext | null {
-  if (!canPlaySound()) return null;
+  // 最初のユーザー操作より前は AudioContext を作らない（リロード直後の CPU のバトルなど）
+  if (!canPlaySound() || !gestureDone()) return null;
   const c = getCtx(); if (!c || !bus('sfx')) return null;
   resumeCtx(c);
   if (c.state === 'closed') return null;
@@ -89,10 +89,8 @@ export function sfxResult(kind: BattleSound): void {
 
 /**
  * スマホの自動再生制限対策：最初のユーザー操作で AudioContext を作って再開する（context.ts）。
- * 試験機能がオフの端末では何もしない。
+ * 効果音オフでも、あとからオンにしたときにすぐ鳴らせるようリスナーは付けておく（操作があるまで AudioContext は作らない）。
  */
 export function initAudioUnlock(): void {
-  // 試験機能がオフなら AudioContext を作らない（リスナーも付けない）
-  if (!preview && !isFeatureOn('sound')) return;
   unlockOnGesture();
 }
