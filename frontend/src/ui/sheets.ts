@@ -35,7 +35,7 @@ function handHTML(res: Resources, give: Bundle | null, get: Bundle | null): stri
     return `<div class="mr ${cls}" role="img" aria-label="${label}"><span class="ic" aria-hidden="true">${ICON[r]}</span><b aria-hidden="true">${res[r]}</b><small aria-hidden="true">${sub}</small></div>`;
   }).join('');
   const n = RES.reduce((s, r) => s + res[r], 0);
-  return `<div class="lbl">あなたの手札（${n}枚）${changed ? '　→ は交換後の枚数' : ''}</div><div class="mrs">${cells}</div>`;
+  return `<div class="hand"><div class="lbl">あなたの手札（${n}枚）${changed ? '　→ は交換後の枚数' : ''}</div><div class="mrs">${cells}</div></div>`;
 }
 
 /* ---------- trade ---------- */
