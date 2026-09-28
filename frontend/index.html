@@ -16,7 +16,7 @@
 </head>
 <body>
 <div id="app">
-  <header><h1>🏝️ モフルジム</h1><span id="roomTag" hidden></span><div class="sp"></div><button class="icon-btn" id="helpBtn" aria-label="遊び方">?</button><button class="icon-btn" id="newBtn" aria-label="新しいゲーム">↻</button><button class="icon-btn" id="soundBtn" aria-label="効果音"></button><button class="icon-btn" id="bgmBtn" aria-label="BGM" data-feature="bgm" hidden></button><button class="icon-btn" id="homeBtn" aria-label="タイトルに戻る">⌂</button></header>
+  <header><h1>🏝️ モフルジム</h1><span id="roomTag" hidden></span><div class="sp"></div><button class="icon-btn" id="helpBtn" aria-label="遊び方">?</button><button class="icon-btn" id="newBtn" aria-label="新しいゲーム">↻</button><button class="icon-btn" id="soundBtn" aria-label="効果音"></button><button class="icon-btn" id="bgmBtn" aria-label="BGM"></button><button class="icon-btn" id="homeBtn" aria-label="タイトルに戻る">⌂</button></header>
   <div id="players"></div>
   <div id="msg"></div>
   <div id="boardWrap"><svg id="board" viewBox="-252 -218 504 436" preserveAspectRatio="xMidYMid meet"></svg></div>
@@ -105,7 +105,7 @@
     <h3 class="set-h">効果音（バトル）</h3>
     <div class="seg soundSeg"><button data-sound="on">🔊 オン</button><button data-sound="off">🔇 オフ</button></div>
   </div>
-  <div data-feature="bgm" hidden>
+  <div>
     <h3 class="set-h">BGM</h3>
     <div class="seg bgmSeg"><button data-bgm="on">🎵 オン</button><button data-bgm="off">🔇 オフ</button></div>
   </div>
@@ -148,7 +148,7 @@
         <h3>効果音（バトル）</h3>
         <div class="seg soundSeg"><button data-sound="on">🔊 オン</button><button data-sound="off">🔇 オフ</button></div>
       </div>
-      <div data-feature="bgm" hidden>
+      <div>
         <h3>BGM</h3>
         <div class="seg bgmSeg"><button data-bgm="on">🎵 オン</button><button data-bgm="off">🔇 オフ</button></div>
       </div>

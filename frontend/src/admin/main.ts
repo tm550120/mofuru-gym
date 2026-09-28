@@ -1,4 +1,4 @@
-/* 管理ページ（admin.html）：試験機能（BGM）の切り替え・効果音／BGM と演出のテスト・データの削除。
+/* 管理ページ（admin.html）：試験機能の切り替え・効果音／BGM と演出のテスト・データの削除。
  * ゲーム画面からはリンクしない。アクセスキーはブラウザ内だけの簡易ロック（accessKey.ts 参照）。 */
 import '../style.css';
 import './admin.css';
@@ -12,8 +12,9 @@ import { initAudioUnlock, setSoundPreview, sfxBattleStart, sfxDiceTick, sfxResul
 import { clearRetiredFeatures, FEATURES, isFeatureId, isFeatureOn, setFeature } from '../features';
 import { store } from '../storage';
 import { showBattle } from '../ui/battle';
-import { $, esc } from '../ui/dom';
+import { $ } from '../ui/dom';
 import { checkAccessKey } from './accessKey';
+import { featureListHtml } from './featureList';
 import { DEMO_ME, demoBattle, demoGame } from './demo';
 
 const UNLOCK_KEY = 'mofuru-admin-unlocked';
@@ -44,13 +45,7 @@ function formatTime(iso: string): string {
   try { return d.toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) + '（日本時間）'; }
   catch { return iso; }
 }
-function renderFeatures(): void {
-  $('#featList').innerHTML = FEATURES.map(f => {
-    const on = isFeatureOn(f.id);
-    return `<div class="feat"><b>${esc(f.name)}</b><small>${esc(f.desc)}</small>
-      <div class="seg" data-feat="${f.id}"><button data-on="1" class="${on ? 'sel' : ''}" aria-pressed="${on}">オン</button><button data-on="0" class="${on ? '' : 'sel'}" aria-pressed="${!on}">オフ</button></div></div>`;
-  }).join('');
-}
+function renderFeatures(): void { $('#featList').innerHTML = featureListHtml(FEATURES, isFeatureOn); }
 function renderPanel(): void {
   $('#verCommit').textContent = __APP_COMMIT__;
   $('#verTime').textContent = formatTime(__BUILD_TIME__);

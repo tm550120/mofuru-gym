@@ -5,15 +5,13 @@ import { bgmAllowed } from '.';
 afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); });
 
 describe('bgmAllowed（BGM を流してよいか）', () => {
-  type args = { feature: boolean; userOn: boolean };
+  type args = { userOn: boolean };
   const tests: Record<string, { args: args; expected: { want: boolean } }> = {
-    'success: 試験機能オン・BGMオンなら流す': { args: { feature: true, userOn: true }, expected: { want: true } },
-    'success: 試験機能オフならBGMオンでも流さない': { args: { feature: false, userOn: true }, expected: { want: false } },
-    'success: 試験機能オンでもBGMオフなら流さない': { args: { feature: true, userOn: false }, expected: { want: false } },
-    'success: どちらもオフなら流さない': { args: { feature: false, userOn: false }, expected: { want: false } },
+    'success: BGMオンなら流す': { args: { userOn: true }, expected: { want: true } },
+    'success: BGMオフなら流さない': { args: { userOn: false }, expected: { want: false } },
   };
   for (const [name, tt] of Object.entries(tests)) {
-    it(name, () => { expect(bgmAllowed(tt.args.feature, tt.args.userOn)).toBe(tt.expected.want); });
+    it(name, () => { expect(bgmAllowed(tt.args.userOn)).toBe(tt.expected.want); });
   }
 });
 
@@ -34,22 +32,26 @@ function fakeAudio() {
   return { count, FakeCtx };
 }
 
-describe('BGM の起動（試験機能・ユーザー設定による抑止）', () => {
-  type setup = { stored: Record<string, string> };
+describe('BGM の起動（ユーザー設定・タブの表示による抑止）', () => {
+  type setup = { stored: Record<string, string>; hidden: boolean };
   type expected = { listeners: string[]; ctx: number; played: boolean };
   const gesture = ['pointerdown', 'touchend', 'keydown'];
+  const all = [...gesture, 'visibilitychange'];
   const tests: Record<string, { setup: setup; expected: expected }> = {
-    'success: 試験機能オン・BGMオンなら、最初の操作のあとにタイトルの曲を流す': {
-      setup: { stored: { 'mofuru-feature-bgm': '1' } }, expected: { listeners: [...gesture, 'visibilitychange'], ctx: 1, played: true },
+    'success: BGM が未設定（初期値オン）なら、最初の操作のあとにタイトルの曲を流す': {
+      setup: { stored: {}, hidden: false }, expected: { listeners: all, ctx: 1, played: true },
     },
-    'success: 試験機能が未設定（初期値）ならリスナーも AudioContext も作らない': {
-      setup: { stored: {} }, expected: { listeners: [], ctx: 0, played: false },
+    'success: BGMオンなら流す': {
+      setup: { stored: { 'mofuru-bgm': '1' }, hidden: false }, expected: { listeners: all, ctx: 1, played: true },
     },
-    'success: 古い効果音の試験機能のキー（mofuru-feature-sound）が残っていても BGM は流さない': {
-      setup: { stored: { 'mofuru-feature-sound': '1', 'mofuru-bgm': '1' } }, expected: { listeners: [], ctx: 0, played: false },
+    'success: BGMオフなら流さない（あとでオンにできるようリスナーは付ける）': {
+      setup: { stored: { 'mofuru-bgm': '0' }, hidden: false }, expected: { listeners: all, ctx: 1, played: false },
     },
-    'success: 試験機能オンでも BGM オフなら流さない': {
-      setup: { stored: { 'mofuru-feature-bgm': '1', 'mofuru-bgm': '0' } }, expected: { listeners: [...gesture, 'visibilitychange'], ctx: 1, played: false },
+    'success: 古い試験機能のキーがオフで残っていても BGM オンなら流す': {
+      setup: { stored: { 'mofuru-feature-bgm': '0', 'mofuru-feature-sound': '0' }, hidden: false }, expected: { listeners: all, ctx: 1, played: true },
+    },
+    'success: タブが隠れているあいだは流さない': {
+      setup: { stored: {}, hidden: true }, expected: { listeners: all, ctx: 1, played: false },
     },
   };
   for (const [name, tt] of Object.entries(tests)) {
@@ -60,7 +62,7 @@ describe('BGM の起動（試験機能・ユーザー設定による抑止）', 
       const addEventListener = vi.fn((e: string, f: () => void) => { handlers.set(e, f); });
       vi.stubGlobal('localStorage', fakeStorage(tt.setup.stored));
       vi.stubGlobal('window', { AudioContext: FakeCtx });
-      vi.stubGlobal('document', { hidden: false, addEventListener, removeEventListener: vi.fn() });
+      vi.stubGlobal('document', { hidden: tt.setup.hidden, addEventListener, removeEventListener: vi.fn() });
       vi.resetModules();
       const m = await import('.');
       m.initBgm();
