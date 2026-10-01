@@ -15,9 +15,9 @@ export interface Release {
 
 export const RELEASES: readonly Release[] = [
   {
-    date: null,
-    pr: null,
-    title: 'ホームを起点にした画面の行き来',
+    date: '2026-10-01',
+    pr: 10,
+    title: 'ホームを起点にした画面の行き来／ジム・都市の建設上限／リリースノート',
     changes: [
       'ブラウザの「戻る」でホーム（タイトル）に戻るようにした。対戦中・チュートリアル中は確認を出す',
       'ホームに管理ページへのリンク、管理ページに「← ホームに戻る」を追加',
