@@ -1,4 +1,5 @@
 /* タイトル画面・モード選択・ヘッダーのボタン */
+import { AWAY_STATE, createHomeNav, leaveConfirmText } from '../app/homeNav';
 import { newGame, resumeCpuGame } from '../app/session';
 import { SAVE_CPU, loadCpuSave, loadGuestSave, loadHostSave } from '../app/save';
 import { setBgm, setCpuOrder, setSound, setSpeed, settings } from '../app/settings';
@@ -11,13 +12,31 @@ import type { TileType } from '../game/types';
 import { Net } from '../net/online';
 import { CODE_LENGTH, normalizeRoomCode, roomCodeError } from '../net/protocol';
 import { store } from '../storage';
-import { initGuide, startGuide } from '../tutorial/guide';
+import { guideEnded, initGuide, startGuide, stopGuide } from '../tutorial/guide';
 import { house, monSVG } from './art';
 import { $ } from './dom';
 import { syncMusic } from './music';
 import { resetLocalUI } from './render';
 
 export type TitlePanel = 'menu' | 'cpu' | 'online' | 'lobby';
+
+/* ブラウザの「戻る」をホーム（タイトルのメニュー）基点にする。しくみは app/homeNav.ts */
+const nav = createHomeNav({
+  state: () => history.state,
+  push: () => { try { history.pushState(AWAY_STATE, ''); } catch { /* ignore */ } },
+  back: () => history.back(),
+  atHome: () => $('#title').classList.contains('show') && !$('#tMenu').hidden,
+  leave: backHome,
+});
+/** もう失うものがない状態か（チュートリアル完了・決着後）。このときはホームへ戻る確認を出さない */
+const finished = (): boolean => app.mode === 'tutorial' ? guideEnded() : !!app.G && app.G.phase === 'over';
+/** ブラウザの「戻る」でホームへ：⌂ と同じ確認を出し、取り消されたら今の画面のまま（接続も保存もそのまま） */
+function backHome(): void {
+  const msg = leaveConfirmText(app.mode, finished());
+  if (msg && !confirm(msg)) return;
+  if (app.mode === 'tutorial') stopGuide();
+  if (app.mode) goTitle(); else showTitle('menu');
+}
 
 /** 新しい CPU 対戦を始める（席0=あなた（赤）、席1,2=CPU。手番はタイトルで選んだ順） */
 export function startCpu(): void {
@@ -42,7 +61,7 @@ export function goTitle(): void {
   ['dlgBg', 'helpBg'].forEach(id => $('#' + id).classList.remove('show'));
   showTitle('menu');
 }
-export function hideTitle(): void { $('#title').classList.remove('show'); syncMusic(); }
+export function hideTitle(): void { $('#title').classList.remove('show'); syncMusic(); nav.sync(); }
 export function showTitle(panel: TitlePanel): void {
   $('#title').classList.add('show'); $('#title').classList.toggle('compact', panel !== 'menu');
   $('#tMenu').hidden = panel !== 'menu'; $('#tCpu').hidden = panel !== 'cpu'; $('#tOnline').hidden = panel !== 'online'; $('#tLobby').hidden = panel !== 'lobby';
@@ -50,6 +69,7 @@ export function showTitle(panel: TitlePanel): void {
   if (panel === 'menu') refreshTitle();
   if (panel === 'cpu') renderSegs();
   syncMusic();
+  nav.sync();
 }
 /** 続きから／再開ボタンの表示 */
 export function refreshTitle(): void {
@@ -93,7 +113,6 @@ const readNick = (): string => { const n = $<HTMLInputElement>('#nick').value.tr
 export function initTitle(): void {
   /* header */
   $('#helpBtn').onclick = () => { renderSegs(); $('#helpBg').classList.add('show'); };
-  $('#tHelp').onclick = () => { renderSegs(); $('#helpBg').classList.add('show'); };
   $('#hClose').onclick = () => $('#helpBg').classList.remove('show');
   document.querySelectorAll('.speedSeg').forEach(el => el.addEventListener('click', e => {
     const b = (e.target as Element).closest<HTMLButtonElement>('button[data-speed]'); if (!b) return; setSpeed(b.dataset.speed); renderSegs();
@@ -115,9 +134,8 @@ export function initTitle(): void {
     } else if (app.mode === 'host') { if (confirm('同じメンバーで新しいゲームを始めますか？\n（今の盤面は破棄されます）')) Net.restart(); }
   };
   $('#homeBtn').onclick = () => {
-    const MODE = app.mode;
-    const msg = MODE === 'tutorial' ? 'チュートリアルをやめて、タイトルに戻りますか？' : MODE === 'host' ? 'タイトルに戻りますか？\n（ホストが抜けるとオンライン対戦は終了します）' : MODE === 'guest' ? 'タイトルに戻りますか？\n（この対戦から抜けます）' : 'タイトルに戻りますか？\n（あとで「続きから」再開できます）';
-    if (confirm(msg)) goTitle();
+    const msg = leaveConfirmText(app.mode, false);
+    if (!msg || confirm(msg)) goTitle();
   };
   $('#again').onclick = playAgain;
   $('#overHome').onclick = goTitle;
@@ -175,6 +193,7 @@ export function initTitle(): void {
   };
   $('#shareBtn').onclick = () => { navigator.share({ title: '開拓の島 モフルジム', text: `モフルジムで対戦しよう！ 部屋コード：${Net.code()}`, url: Net.url() }).catch(() => {}); };
   window.addEventListener('pagehide', () => { Net.pagehide(); });
+  window.addEventListener('popstate', () => nav.onPop());
 
   drawTitle();
   applyFeatureVisibility();

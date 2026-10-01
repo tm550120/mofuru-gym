@@ -3,7 +3,7 @@ import { doAction, myTurn } from '../app/session';
 import { app } from '../app/state';
 import { winProb } from '../game/battle';
 import { COLORS } from '../game/constants';
-import { afford, canRoad, canSettle, citySpots, enemyGyms, roadSpots, settleSpots } from '../game/rules';
+import { afford, canCity, canRoad, canSettle, citySpots, enemyGyms, roadSpots, settleSpots } from '../game/rules';
 import { islandSVG } from './art';
 import { battleUI } from './battle';
 import { $ } from './dom';
@@ -47,7 +47,7 @@ function onVertex(v: number): void {
   if (G.phase === 'battle') { const o = G.V[v].owner; if (o === null || o === ME) return; doAction({ t: 'battle', v }); return; }
   if (G.phase !== 'main') return;
   if (ui.mode === 'settlement' && afford(G, ME, 'settlement') && canSettle(G, v, ME, false)) { ui.mode = null; doAction({ t: 'settle', v }); }
-  else if (ui.mode === 'city' && G.V[v].owner === ME && !G.V[v].city && afford(G, ME, 'city')) { ui.mode = null; doAction({ t: 'city', v }); }
+  else if (ui.mode === 'city' && canCity(G, v, ME) && afford(G, ME, 'city')) { ui.mode = null; doAction({ t: 'city', v }); }
 }
 function onEdge(e: number): void {
   const G = app.G!, ME = app.me;

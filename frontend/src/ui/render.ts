@@ -2,9 +2,9 @@
 import { clearDuties, myTurn } from '../app/session';
 import { D } from '../app/settings';
 import { app, isOnline } from '../app/state';
-import { DIE, GOAL, ICON, JA, RES, TYPE_JA } from '../game/constants';
+import { DIE, GOAL, ICON, JA, MAX_CITIES, MAX_GYMS, RES, TYPE_JA } from '../game/constants';
 import { die } from '../game/random';
-import { afford, canEvolve, citySpots, isCpu, roadSpots, settleSpots, total, vp } from '../game/rules';
+import { afford, canEvolve, citiesLeft, citySpots, gymsLeft, isCpu, roadSpots, settleSpots, total, vp } from '../game/rules';
 import { Net } from '../net/online';
 import { monSVG } from './art';
 import { battleUI, closeBattle, showBattle } from './battle';
@@ -80,6 +80,24 @@ function renderDice(): void {
   if (!diceT) fin();
 }
 
+/** ジム・都市のボタン：右上に残り個数。上限に達したら、下の文字（必要な資源）を「上限◯個」にして理由が分かるようにする */
+function renderLimits(): void {
+  const G = app.G!, ME = app.me;
+  const lim: Record<'settlement' | 'city', { left: number; max: number }> = {
+    settlement: { left: gymsLeft(G, ME), max: MAX_GYMS },
+    city: { left: citiesLeft(G, ME), max: MAX_CITIES },
+  };
+  (Object.keys(lim) as ('settlement' | 'city')[]).forEach(k => {
+    const b = document.querySelector<HTMLButtonElement>(`.ab[data-act="${k}"]`); if (!b) return;
+    const span = b.querySelector('span'), tag = b.querySelector<HTMLElement>('.lim'); if (!span || !tag) return;
+    if (!b.dataset.cost) b.dataset.cost = span.textContent || '';
+    const { left, max } = lim[k], full = left === 0;
+    span.textContent = full ? `上限${max}個` : b.dataset.cost;
+    tag.textContent = full ? '上限' : `あと${left}`; tag.hidden = G.phase === 'setup';
+    b.classList.toggle('full', full);
+  });
+}
+
 export function render(): void {
   const G = app.G; if (!G) return;
   const ME = app.me, MODE = app.mode;
@@ -111,6 +129,7 @@ export function render(): void {
   $('#log').innerHTML = G.log.slice(0, 2).map(l => `<div>${esc(l)}</div>`).join('');
   toastNew();
   document.querySelectorAll<HTMLButtonElement>('.ab').forEach(b => { const a = b.dataset.act as keyof typeof ok; b.disabled = !ok[a]; b.classList.toggle('on', ui.mode === a && G.phase === 'main'); });
+  renderLimits();
   $('#newBtn').hidden = MODE === 'guest' || MODE === 'tutorial';
   $('#roomTag').hidden = !online; if (online) $('#roomTag').textContent = '部屋 ' + Net.code();
   renderOffer(); renderDiscard();

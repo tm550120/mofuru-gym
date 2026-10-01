@@ -11,6 +11,10 @@
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
+<!-- いつでも見える「ホームに戻る」（アクセスキーを入れる前でも押せる）。data-home：履歴に積まずにホームへ戻る（src/homeLink.ts） -->
+<nav class="anav" aria-label="ページの移動"><div>
+  <a data-home href="./index.html">← ホームに戻る</a>
+</div></nav>
 <div class="screen show admin" id="admin"><div class="tbox">
   <h1 class="ttl"><small>モフルジム</small>管理ページ</h1>
 
@@ -29,11 +33,17 @@
       <p class="ainfo">コミット <b id="verCommit"></b><br>ビルド日時 <b id="verTime"></b></p>
     </div>
 
+    <section class="relsec" aria-labelledby="relHead">
+      <h3 id="relHead">リリースノート</h3>
+      <p class="ainfo">遊ぶ人から見た変更点（PR ごと・新しい順）。タップで開きます。</p>
+      <div id="relList"></div>
+    </section>
+
     <div class="card">
       <h3>試験機能</h3>
       <p class="ainfo">この端末（このブラウザ）だけに反映されます。一般のプレイヤーには表示されません。</p>
       <div id="featList"></div>
-      <a class="tbtn pri alink" href="./index.html">ゲームを開く</a>
+      <a class="tbtn pri alink" data-home href="./index.html">ゲームを開く</a>
     </div>
 
     <div class="card">

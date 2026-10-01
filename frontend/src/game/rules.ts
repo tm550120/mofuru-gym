@@ -1,6 +1,6 @@
 /* ゲームのルール（DOM に依存しない純粋なロジック）。状態 g を直接書き換える */
 import { makeBoard } from './board';
-import { COLORS, COST, GOAL, ICON, MON_NAME, RES, TYPE_JA } from './constants';
+import { COLORS, COST, GOAL, ICON, MAX_CITIES, MAX_GYMS, MON_NAME, RES, TYPE_JA } from './constants';
 import { defaultRng, die, shuffle } from './random';
 import type { BuildKind, Bundle, GameState, Mon, OfferTarget, Player, Resource, Resources, Rng, Seat } from './types';
 
@@ -59,8 +59,17 @@ export function vp(g: GameState, p: number): number {
   let s = 0; g.V.forEach(v => { if (v.owner === p) s += v.city ? 2 : 1; });
   return s + (g.lr === p ? 2 : 0) + (g.champ === p ? 2 : 0);
 }
+/** 盤面にある席 p のジム（都市は含まない）・都市の数 */
+export const gymCount = (g: GameState, p: number): number => g.V.filter(v => v.owner === p && !v.city).length;
+export const cityCount = (g: GameState, p: number): number => g.V.filter(v => v.owner === p && v.city).length;
+/** あといくつ置けるか（上限を超えた盤面を読み込んでも 0 で止まる） */
+export const gymsLeft = (g: GameState, p: number): number => Math.max(0, MAX_GYMS - gymCount(g, p));
+export const citiesLeft = (g: GameState, p: number): number => Math.max(0, MAX_CITIES - cityCount(g, p));
+
+/** 交差点 v に席 p がジムを置けるか（初期配置も含め、ジムの上限もここで見る） */
 export function canSettle(g: GameState, v: number, p: number, setup: boolean): boolean {
   const x = g.V[v]; if (!x || x.owner !== null) return false;
+  if (!gymsLeft(g, p)) return false;
   if (x.adj.some(a => g.V[a].owner !== null)) return false;
   return setup || x.edges.some(e => g.E[e].owner === p);
 }
@@ -75,7 +84,9 @@ export function canRoad(g: GameState, e: number, p: number): boolean {
 }
 export const settleSpots = (g: GameState, p: number, setup: boolean): number[] => g.V.filter(v => canSettle(g, v.id, p, setup)).map(v => v.id);
 export const roadSpots = (g: GameState, p: number): number[] => g.E.filter(e => canRoad(g, e.id, p)).map(e => e.id);
-export const citySpots = (g: GameState, p: number): number[] => g.V.filter(v => v.owner === p && !v.city).map(v => v.id);
+/** 席 p がジム v を都市にできるか（都市の上限もここで見る） */
+export const canCity = (g: GameState, v: number, p: number): boolean => { const x = g.V[v]; return !!x && x.owner === p && !x.city && citiesLeft(g, p) > 0; };
+export const citySpots = (g: GameState, p: number): number[] => g.V.filter(v => canCity(g, v.id, p)).map(v => v.id);
 export const enemyGyms = (g: GameState, p: number): number[] => g.V.filter(v => v.owner !== null && v.owner !== p).map(v => v.id);
 export const canEvolve = (g: GameState, p: number): boolean => !g.players[p].mon && RES.some(r => g.players[p].res[r] >= 3);
 

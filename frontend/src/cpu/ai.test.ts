@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { mainPhaseGame, seqRng, setRes } from '../game/testHelpers';
+import { MAX_CITIES, MAX_GYMS } from '../game/constants';
+import { cityCount, gymCount } from '../game/rules';
+import { mainPhaseGame, placeBuildings, seededRng, seqRng, setRes } from '../game/testHelpers';
 import type { Mon, Offer, Resources } from '../game/types';
 import { aiAct, aiGoals, aiNeeds, aiPickType, aiTradeIdea, cpuDiscard, cpuLikes, pickBattleTarget } from './ai';
 
@@ -168,4 +170,65 @@ describe('aiTradeIdea（CPU からの交換の提案）', () => {
       expect(aiTradeIdea(g, 1)).toEqual(tt.expected.want);
     });
   }
+});
+
+describe('ジム・都市の上限（CPU）', () => {
+  /** 席1（CPU）の道の先に、ジムを置ける交差点を1つ用意する */
+  const openSpotFor1 = (g: ReturnType<typeof mainPhaseGame>): number => {
+    const v = g.V.find(x => x.owner === null && !x.adj.some(a => g.V[a].owner !== null))!;
+    g.E[v.edges[0]].owner = 1;
+    return v.id;
+  };
+  const tests: Record<string, {
+    args: { res: Partial<Resources> };
+    setup: { gyms: number; cities: number; spot: boolean };
+    expected: { want: boolean; gyms: number; cities: number; goals: ReturnType<typeof aiGoals> };
+  }> = {
+    'success: ジムが上限なら、材料と場所があってもジムを建てず、道も建てない': {
+      args: { res: { wood: 1, brick: 1, sheep: 1, wheat: 1 } },
+      setup: { gyms: MAX_GYMS, cities: 0, spot: true },
+      expected: { want: false, gyms: MAX_GYMS, cities: 0, goals: ['city'] },
+    },
+    'success: ジムが上限でも、都市の材料があれば都市にする': {
+      args: { res: { wheat: 2, ore: 3 } },
+      setup: { gyms: MAX_GYMS, cities: 0, spot: false },
+      expected: { want: true, gyms: MAX_GYMS - 1, cities: 1, goals: ['city', 'road'] },
+    },
+    'success: 都市が上限なら、材料があっても都市にしない': {
+      args: { res: { wheat: 2, ore: 3 } },
+      setup: { gyms: 1, cities: MAX_CITIES, spot: false },
+      expected: { want: false, gyms: 1, cities: MAX_CITIES, goals: ['road'] },
+    },
+  };
+  for (const [name, tt] of Object.entries(tests)) {
+    it(name, () => {
+      const g = mainPhaseGame();
+      g.cur = 1; g.cpuTradeTurn = g.turnN; // 交換の提案はこの番ではしない
+      placeBuildings(g, 1, tt.setup.cities, true);
+      placeBuildings(g, 1, tt.setup.gyms);
+      if (tt.setup.spot) openSpotFor1(g);
+      setRes(g, 1, tt.args.res);
+      expect(aiAct(g, 1, seqRng([.9]))).toBe(tt.expected.want);
+      expect(gymCount(g, 1)).toBe(tt.expected.gyms);
+      expect(cityCount(g, 1)).toBe(tt.expected.cities);
+      expect(aiGoals(g, 1)).toEqual(tt.expected.goals);
+    });
+  }
+
+  it('success: 資源がたくさんあっても、上限を超えずに手番の行動が終わる', () => {
+    const g = mainPhaseGame();
+    g.cur = 1;
+    placeBuildings(g, 1, MAX_GYMS);
+    setRes(g, 1, { wood: 30, brick: 30, sheep: 30, wheat: 30, ore: 30 });
+    const rng = seededRng(7);
+    let n = 0;
+    while (aiAct(g, 1, rng)) {
+      n++;
+      expect(gymCount(g, 1)).toBeLessThanOrEqual(MAX_GYMS);
+      expect(cityCount(g, 1)).toBeLessThanOrEqual(MAX_CITIES);
+      g.offer = null;
+      expect(n).toBeLessThan(200);
+    }
+    expect(cityCount(g, 1)).toBe(MAX_CITIES);
+  });
 });

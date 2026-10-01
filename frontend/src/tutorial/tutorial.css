@@ -1,4 +1,4 @@
-/* チュートリアルだけのスタイル（色・フォント・部品はゲームの style.css を流用） */
+/* 読み物ページ「遊び方・早見表」（tutorial.html）だけのスタイル（色・フォント・部品はゲームの style.css を流用） */
 /* ゲーム画面は1画面に固定（スクロールなし・文字選択なし）なので、読み物のページ用に戻す */
 html.tut{height:auto;padding-top:0;scroll-behavior:smooth;scroll-padding-top:calc(58px + env(safe-area-inset-top,0px))}
 html.tut body{height:auto;overflow:visible;user-select:text;-webkit-user-select:text;font-size:15px;font-weight:500;line-height:1.8;overflow-wrap:anywhere}

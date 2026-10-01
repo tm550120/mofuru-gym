@@ -11,3 +11,26 @@ a.alink{text-decoration:none;text-align:center;margin:4px 0 0}
 .aconfirm{background:var(--soft);border-radius:12px;padding:10px;margin-top:4px}
 .aconfirm p{margin:0 0 8px;font-weight:700;font-size:14px}
 .sbtn.danger{background:#c3302a;color:#fff}
+/* 上に固定する移動バー（読み物ページ tutorial.css の .tnav と同じ見た目） */
+.anav{position:fixed;top:0;left:0;right:0;z-index:25;padding-top:env(safe-area-inset-top,0px);background:color-mix(in srgb,var(--page) 90%,transparent);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.anav div{display:flex;align-items:center;gap:6px;max-width:640px;margin:0 auto;padding:8px 12px}
+.anav a{padding:5px 12px;border-radius:999px;background:var(--btn);color:var(--btnInk);border:1px solid var(--btn);font-weight:800;font-size:13px;text-decoration:none;white-space:nowrap}
+.screen.admin{padding-top:calc(64px + env(safe-area-inset-top,0px))}
+/* リリースノート：1 PR = 1 カード。最初はすべて閉じ、同時に開くのは 1 つ */
+.relsec{text-align:left;margin:4px 0 14px}
+.relsec h3{margin:0 4px 4px;font-size:15px}
+.relsec>.ainfo{margin:0 4px 8px}
+.rel{background:var(--panel);border:1px solid var(--line);border-radius:16px;margin-bottom:8px;overflow:hidden}
+.rel summary{cursor:pointer;list-style:none;display:block;position:relative;padding:10px 14px 10px 32px;font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+.rel summary::-webkit-details-marker{display:none}
+.rel summary::before{content:'▸';position:absolute;left:14px;top:10px;color:var(--sub)}
+.rel[open] summary::before{content:'▾'}
+.rel summary:focus-visible{outline:2px solid var(--sea);outline-offset:-2px;border-radius:16px}
+.rmeta{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12px;color:var(--sub);font-weight:700}
+.rpr{color:var(--ink)}
+.rtag{background:var(--sea);color:#fff;border-radius:999px;padding:1px 8px}
+.rttl{display:block}
+.rel:not([open]) .rttl{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}
+.rbody{padding:0 14px 12px 32px}
+.rbody ul{margin:0;padding-left:18px;font-size:13px;line-height:1.6;overflow-wrap:anywhere}
+.rbody li{margin-bottom:2px}
