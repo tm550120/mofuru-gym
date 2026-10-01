@@ -16,6 +16,8 @@ let timer: ReturnType<typeof setInterval> | null = null;
 let ended = false;
 
 export const guideActive = (): boolean => idx >= 0;
+/** しめくくり（チュートリアル完了）まで進んだか */
+export const guideEnded = (): boolean => ended;
 
 export function startGuide(): void {
   stopGuide();

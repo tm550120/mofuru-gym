@@ -49,6 +49,11 @@ header .icon-btn,#roomTag{flex:none}
 .ab span{display:block;font-size:10px;font-weight:500;letter-spacing:-.08em}
 .ab.on{border-color:var(--ink)}
 .ab:disabled{opacity:.38;cursor:default}
+/* ジム・都市の残り個数（右上の小さな札）。上限に達したら札とボタンの下の文字で「上限」と出す */
+.ab{position:relative}
+.ab .lim{position:absolute;top:-6px;right:-2px;font-style:normal;font-size:9px;font-weight:800;line-height:1;padding:2px 4px;border-radius:7px;background:var(--ink);color:var(--panel);white-space:nowrap;pointer-events:none}
+.ab.full .lim{background:var(--short);color:var(--panel)}
+.ab.full:disabled{opacity:.6}
 #main{margin-top:6px;width:100%;padding:12px;border-radius:14px;background:var(--btn);color:var(--btnInk);font-weight:800;font-size:16px}
 #main:disabled{opacity:.45}
 .sheet-bg{position:fixed;inset:0;background:rgba(10,25,28,.5);display:none;align-items:flex-end;justify-content:center;z-index:10}
@@ -183,6 +188,8 @@ a.tbtn{text-decoration:none;text-align:center;color:inherit}
 /* ---------- ガイド付きチュートリアル（吹き出し・スポットライト） ---------- */
 .tlinks{display:flex;justify-content:center;gap:6px;flex-wrap:wrap}
 a.tlink{display:inline-block}
+/* 管理ページへのリンク：一般のプレイヤーにも見えるので、ほかのリンクより控えめに */
+.tadmin .tlink{font-size:12px;opacity:.7;padding:4px 8px}
 /* 幅320pxでプレイヤー欄がはみ出して、案内が画面の外にずれないようにする */
 body.guiding .pl{min-width:0}
 body.guiding .pn{overflow:hidden}

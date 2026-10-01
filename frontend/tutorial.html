@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>はじめての人へ（チュートリアル）｜開拓の島 モフルジム</title>
-<meta name="description" content="「開拓の島 モフルジム」をはじめて遊ぶ人のためのチュートリアル。操作の手順、勝ち方のコツ、遊びながら見返せる早見表。">
+<title>遊び方・早見表｜開拓の島 モフルジム</title>
+<meta name="description" content="「開拓の島 モフルジム」の遊び方。操作の手順、勝ち方のコツ、遊びながら見返せる早見表。">
 <meta name="theme-color" content="#2b7b8c">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
@@ -14,25 +14,26 @@
 </head>
 <body>
 <!--
-  チュートリアルの文章。ルール・コスト・ボタンの文言はゲームの実装に合わせてある。
+  読み物ページ「遊び方・早見表」の文章（遊び方・勝ち方・早見表はここ 1 か所にまとめる）。ルール・コスト・ボタンの文言はゲームの実装に合わせてある。
   実装を変えたときは、ここも合わせて直す：
     コスト・得点・相性 … src/game/constants.ts　　ルール … src/game/rules.ts・battle.ts・actions.ts
     画面の文言 … index.html・src/ui/render.ts・sheets.ts・battle.ts　　CPU の動き … src/cpu/ai.ts
   図（data-fig・data-mon・data-house）は src/tutorial/main.ts が描く。
+  ゲーム（index.html）へ戻るリンクには data-home を付ける（履歴に積まずに戻る。src/homeLink.ts）。
 -->
 <nav class="tnav" aria-label="ページ内の移動"><div>
-  <a class="pri" href="./index.html">← ゲームに戻る</a><span class="sp"></span><a href="#toc">目次</a><a href="#cheat">早見表</a>
+  <a class="pri" data-home href="./index.html">← ゲームに戻る</a><span class="sp"></span><a href="#toc">目次</a><a href="#cheat">早見表</a>
 </div></nav>
 
 <div class="thero">
   <div class="hmon" data-mon="none"></div>
   <div class="tmons"><span data-mon="wood"></span><span data-mon="brick"></span><span data-mon="sheep"></span><span data-mon="wheat"></span><span data-mon="ore"></span></div>
-  <h1 class="ttl"><small>開拓の島 モフルジム</small>はじめての人へ</h1>
-  <p class="tsub">はじめて遊ぶ人のためのチュートリアルです。<br>操作の手順・勝ち方・早見表をまとめました。</p>
+  <h1 class="ttl"><small>開拓の島 モフルジム</small>遊び方・早見表</h1>
+  <p class="tsub">操作の手順・勝ち方のコツ・早見表を<br>このページにまとめました。</p>
 </div>
 
 <main class="twrap">
-  <a class="tbtn pri" id="toGuide" href="./index.html?guide=1">👆 実際に操作して覚える<span>本物のゲーム画面で、案内どおりにタップして進めます</span></a>
+  <a class="tbtn pri" id="toGuide" data-home href="./index.html?guide=1">👆 実際に操作して覚える<span>本物のゲーム画面で、案内どおりにタップして進めます</span></a>
   <a class="tbtn" href="#start">🎮 操作を1から読む<span>ゲームを開いてから、最初の番が終わるまで</span></a>
   <a class="tbtn" href="#win">🏆 どうやったら勝てる？<span>得点のしくみと、勝ち方のコツ</span></a>
   <a class="tbtn" href="#cheat">📋 早見表<span>遊びながら、手順・コスト・相性をたしかめる</span></a>
@@ -231,6 +232,8 @@
     <ul>
       <li>ボタンがうすいときは、資源が足りないか、置ける場所がありません。</li>
       <li>やめるときは、同じボタンをもう一度タップします。</li>
+      <li><b>ジムは5個、都市は4個まで</b>（1人あたり。いま盤面にある数で数え、初期配置の2個も入ります）。ジムを都市にすると、ジムの枠が1つ空きます。道は何本でも置けます。</li>
+      <li>ジム・都市のボタンの右上に、あと何個建てられるかが出ます（<span class="k s">あと3</span>）。上限に達すると <span class="k s">上限</span> と出て、ボタンは押せなくなります。</li>
     </ul>
 
     <h3>道　<span class="em">🌲🧱</span></h3>
@@ -411,7 +414,7 @@
         <tr><th>バトルも使う</th><td>都市2（4点）＋ ジム2（2点）＋ 最長の道（2点）＋ チャンピオン（2点）</td></tr>
       </tbody>
     </table>
-    <p>建物だけで10点にするには、建物が5〜6つ必要です（都市5つでも10点）。最長の道やチャンピオンの +2点を取ると、そのぶん少ない建物で届きます。</p>
+    <p>建物だけで10点にするには、建物が6つ必要です（都市は4個までなので、都市4＋ジム2）。最長の道やチャンピオンの +2点を取ると、そのぶん少ない建物で届きます。</p>
     <div class="tip"><b>基本の進め方</b>ジムを増やす → 都市にする → 余った資源で進化して守りを固める → 最長の道かチャンピオンで +2点。</div>
 
     <h3 id="win-setup">コツ① 初期配置</h3>
@@ -493,6 +496,7 @@
       <li>道：自分のジム・都市・道につながる辺。</li>
       <li>ジム：自分の道がつながっていて、となりの交差点に建物がない交差点。</li>
       <li>都市：自分のジム。</li>
+      <li>上限：1人あたりジム5個・都市4個まで（盤面にある数。都市にするとジムの枠が1つ空く）。道は無制限。</li>
     </ul>
 
     <h3 id="c-score">得点（10点で勝ち）</h3>
@@ -575,7 +579,7 @@
   <section class="sec" id="faq">
     <h2><span class="no">12</span>こまったときは</h2>
     <h4>ボタンがうすくて押せない</h4>
-    <p>建設・進化・交換は、自分の番でサイコロを振ったあとだけできます。それでもうすいときは、資源が足りないか、置ける場所がありません（「進化」は、すでに進化済みのときも押せません）。</p>
+    <p>建設・進化・交換は、自分の番でサイコロを振ったあとだけできます。それでもうすいときは、資源が足りないか、置ける場所がありません（「進化」は、すでに進化済みのときも押せません）。「ジム」「都市」のボタンに <span class="k s">上限</span> と出ているときは、建てられる数の上限（ジム5個・都市4個）に達しています。ジムは都市にすると枠が1つ空きます。</p>
     <h4>CPUの動きが速くて、何が起きたかわからない</h4>
     <p>右上の <span class="k s">?</span> →「進行スピード」を <span class="k s">ゆっくり</span> にします。画面下の出来事の欄をタップすると、これまでの出来事を読み返せます。</p>
     <h4>途中でやめたい・続きから遊びたい</h4>
@@ -589,7 +593,7 @@
   </section>
 
   <div class="sec">
-    <a class="tbtn pri" href="./index.html">🏝️ ゲームを始める<span>タイトル画面へ</span></a>
+    <a class="tbtn pri" data-home href="./index.html">🏝️ ゲームを始める<span>タイトル画面へ</span></a>
     <p style="text-align:center"><a class="tlink" href="#toc">目次へ戻る</a></p>
   </div>
 </main>

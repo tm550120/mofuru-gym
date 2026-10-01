@@ -25,8 +25,8 @@
     <div id="log"></div>
     <div class="acts">
       <button class="ab" data-act="road">道<span>🌲🧱</span></button>
-      <button class="ab" data-act="settlement">ジム<span>🌲🧱🐑🌾</span></button>
-      <button class="ab" data-act="city">都市<span>🌾🌾🪨🪨🪨</span></button>
+      <button class="ab" data-act="settlement">ジム<span>🌲🧱🐑🌾</span><i class="lim" hidden></i></button>
+      <button class="ab" data-act="city">都市<span>🌾🌾🪨🪨🪨</span><i class="lim" hidden></i></button>
       <button class="ab" data-act="evolve">進化<span>同じ資源×3</span></button>
       <button class="ab" data-act="trade">交換<span>銀行4:1</span></button>
     </div>
@@ -87,10 +87,11 @@
 
 <div class="sheet-bg" id="helpBg"><div class="sheet">
   <h2>遊び方</h2>
-  <p class="hlink"><a href="./tutorial.html" target="_blank" rel="noopener">📖 チュートリアル（別のタブで開きます）</a></p>
+  <p class="hlink"><a href="./tutorial.html" target="_blank" rel="noopener">📖 遊び方・早見表（別のタブで開きます）</a></p>
   <ul>
     <li>サイコロの合計と同じ数字の土地に接するジムは資源を1枚、都市は2枚もらえます。</li>
     <li>資源で道・ジム（開拓地）・都市を建てます。ジムは他の建物から2辺以上離し、自分の道につなげます。</li>
+    <li>建てられるのは1人あたりジム5個・都市4個まで（盤面にある数。ジムを都市にするとジムの枠が1つ空きます）。</li>
     <li>同じ資源3枚でモフルを進化。🌲草・🧱炎・🐑風・🌾光・🪨岩の5タイプ。</li>
     <li>自分の番に「交換」から、銀行と4:1で交換するか、ほかのプレイヤーに交換を提案できます（相手が受けたら成立）。</li>
     <li>7が出たら手札8枚以上の人は半分（切り捨て）を、自分で選んで捨てます。7を出した人が進化済みなら、相手のジムに挑戦できます。</li>
@@ -141,7 +142,7 @@
     <li><b>得点</b>ジム 1点／都市 2点／最長の道 +2点／チャンピオン（バッジ3個）+2点</li>
     <li id="gEndNow"></li>
   </ul>
-  <a class="tbtn" id="gCheat" href="./tutorial.html#win">📋 勝ち方・早見表を見る<span>勝ち方のコツと、遊びながら見返せる早見表</span></a>
+  <a class="tbtn" id="gCheat" href="./tutorial.html#win">📋 遊び方・早見表を見る<span>勝ち方のコツと、遊びながら見返せる早見表</span></a>
   <button class="tbtn pri" id="gPlay">🤖 ふつうに遊ぶ<span>CPUと対戦</span></button>
   <button class="tlink" id="gHome">タイトルに戻る</button>
 </div></div>
@@ -160,7 +161,8 @@
     <button class="tbtn pri" id="modeCpu">🤖 CPUと対戦<span>あなた＋CPU 2人</span></button>
     <button class="tbtn" id="modeOnline">👥 フレンド対戦（オンライン）<span>2〜3人・部屋コードで招待</span></button>
     <button class="tbtn" id="tTutorial">📖 はじめての人へ<span>実際に操作しながら覚える（チュートリアル）</span></button>
-    <div class="tlinks"><button class="tlink" id="tHelp">遊び方・ルール</button><a class="tlink" id="tCheat" href="./tutorial.html">勝ち方・早見表</a></div>
+    <div class="tlinks"><a class="tlink" id="tHowto" href="./tutorial.html">遊び方・早見表</a></div>
+    <div class="tlinks tadmin"><a class="tlink" id="tAdmin" href="./admin.html">管理ページ（開発者用）</a></div>
   </div>
 
   <div id="tCpu" hidden>

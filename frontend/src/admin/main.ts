@@ -1,5 +1,6 @@
-/* 管理ページ（admin.html）：試験機能の切り替え・効果音／BGM と演出のテスト・データの削除。
- * ゲーム画面からはリンクしない。アクセスキーはブラウザ内だけの簡易ロック（accessKey.ts 参照）。 */
+/* 管理ページ（admin.html）：リリースノート（releaseNotes.ts）・試験機能の切り替え・効果音／BGM と演出のテスト・データの削除。
+ * タイトルのメニューの「管理ページ」から開く。ホームへ戻るリンクは履歴に積まない（homeLink.ts）。
+ * アクセスキーはブラウザ内だけの簡易ロック（accessKey.ts 参照）。 */
 import '../style.css';
 import './admin.css';
 import { SAVE_CPU, SAVE_GUEST, SAVE_HOST } from '../app/save';
@@ -10,12 +11,15 @@ import { SONGS, type TrackId } from '../audio/bgm/songs';
 import type { BattleSound } from '../audio/outcome';
 import { initAudioUnlock, setSoundPreview, sfxBattleStart, sfxDiceTick, sfxResult } from '../audio/sfx';
 import { clearRetiredFeatures, FEATURES, isFeatureId, isFeatureOn, setFeature } from '../features';
+import { initHomeLinks } from '../homeLink';
 import { store } from '../storage';
 import { showBattle } from '../ui/battle';
 import { $ } from '../ui/dom';
 import { checkAccessKey } from './accessKey';
 import { featureListHtml } from './featureList';
 import { DEMO_ME, demoBattle, demoGame } from './demo';
+import { releaseListHtml } from './releaseNoteList';
+import { RELEASES } from './releaseNotes';
 
 const UNLOCK_KEY = 'mofuru-admin-unlocked';
 const session = {
@@ -45,10 +49,20 @@ function formatTime(iso: string): string {
   try { return d.toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) + '（日本時間）'; }
   catch { return iso; }
 }
+/** リリースノートは同時に 1 つだけ開く。details[name] に対応していないブラウザ（古い Safari など）でも、
+ * 開いたカード以外を閉じて排他にする（toggle はバブリングしないのでキャプチャで拾う） */
+function initReleaseAccordion(): void {
+  $('#relList').addEventListener('toggle', e => {
+    const opened = e.target;
+    if (!(opened instanceof HTMLDetailsElement) || !opened.open) return;
+    $('#relList').querySelectorAll<HTMLDetailsElement>('details[open]').forEach(d => { if (d !== opened) d.open = false; });
+  }, true);
+}
 function renderFeatures(): void { $('#featList').innerHTML = featureListHtml(FEATURES, isFeatureOn); }
 function renderPanel(): void {
   $('#verCommit').textContent = __APP_COMMIT__;
   $('#verTime').textContent = formatTime(__BUILD_TIME__);
+  $('#relList').innerHTML = releaseListHtml(RELEASES);
   renderFeatures();
 }
 
@@ -110,6 +124,8 @@ function init(): void {
   // 管理ページはテスト台：ユーザー設定に関係なく効果音を鳴らす
   setSoundPreview(true);
   initAudioUnlock();
+  initHomeLinks();
+  initReleaseAccordion();
 
   $('#gate').addEventListener('submit', e => { e.preventDefault(); void tryUnlock(); });
   $('#lockBtn').onclick = () => { playBgm('stop'); session.set(false); showPanel(false); $('#keyIn').focus(); };

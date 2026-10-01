@@ -76,3 +76,15 @@ export function pathVertices(g: GameState, edges: number[]): number[] {
 }
 
 export const RES_TYPES: Resource[] = ['wood', 'brick', 'sheep', 'wheat', 'ore'];
+
+/** 席 p の建物を、となり合わない空き交差点に n 個置く（city なら都市にする）。置いた交差点を返す */
+export function placeBuildings(g: GameState, p: number, n: number, city = false): number[] {
+  const placed: number[] = [];
+  for (const v of g.V) {
+    if (placed.length === n) break;
+    if (v.owner !== null || v.adj.some(a => g.V[a].owner !== null)) continue;
+    v.owner = p; v.city = city; placed.push(v.id);
+  }
+  if (placed.length !== n) throw new Error('not enough spots');
+  return placed;
+}

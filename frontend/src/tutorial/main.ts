@@ -1,9 +1,10 @@
-/* チュートリアル（tutorial.html）：文章は HTML に書いてあり、ここでは図だけを描く。
+/* 読み物ページ「遊び方・早見表」（tutorial.html）：文章は HTML に書いてあり、ここでは図だけを描く。
  * 見た目はゲームの style.css を流用し、島・モフル・家の絵はゲームと同じ描画（ui/art）を使う。
  * 図の盤面は scenes.ts が本物のルールで作る。 */
 import '../style.css';
 import './tutorial.css';
 import { BEATS, COLORS, ICON, JA, RES, TYPE_JA, isResource } from '../game/constants';
+import { initHomeLinks } from '../homeLink';
 import { total, vp } from '../game/rules';
 import type { GameState, Resource } from '../game/types';
 import { house, islandSVG, monSVG } from '../ui/art';
@@ -117,3 +118,4 @@ function draw(): void {
 }
 
 draw();
+initHomeLinks();

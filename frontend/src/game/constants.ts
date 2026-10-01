@@ -13,6 +13,9 @@ export const COST: Record<BuildKind, Partial<Record<Resource, number>>> = {
   settlement: { wood: 1, brick: 1, sheep: 1, wheat: 1 },
   city: { wheat: 2, ore: 3 },
 };
+/** 1人が盤面に置いておけるジム・都市の数の上限（いま盤面にある数で数える。ジムを都市にするとジムの枠が1つ空く） */
+export const MAX_GYMS = 5;
+export const MAX_CITIES = 4;
 export const COLORS = ['#d9453a', '#2f6fd6', '#e8961e'];
 export const COLOR_JA = ['赤', '青', '橙'];
 export const DIE = ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];

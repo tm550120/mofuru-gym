@@ -4,7 +4,7 @@ import { battle } from './battle';
 import { ICON, isResource } from './constants';
 import { defaultRng } from './random';
 import {
-  advanceTurn, afford, canEvolve, canRoad, canSettle, cancelOffer, checkWin, doDiscard, evolve, giveInitial, isCpu, log, makeOffer, pay,
+  advanceTurn, afford, canCity, canEvolve, canRoad, canSettle, cancelOffer, checkWin, doDiscard, evolve, giveInitial, isCpu, log, makeOffer, pay,
   placeRoad, placeSettlement, respondOffer, roll, type CpuDiscard,
 } from './rules';
 import type { Action, GameState, Rng } from './types';
@@ -54,7 +54,7 @@ export function applyAction(g: GameState | null, p: number, a: Action | null | u
       if (!main || !afford(g, p, 'road') || !canRoad(g, e, p)) return false;
       pay(g, p, 'road'); placeRoad(g, e, p); log(g, `${pl.name}が道を建てた`); checkWin(g); return 'update';
     case 'city':
-      if (!vOk || !main || g.V[v].owner !== p || g.V[v].city || !afford(g, p, 'city')) return false;
+      if (!vOk || !main || !canCity(g, v, p) || !afford(g, p, 'city')) return false;
       pay(g, p, 'city'); g.V[v].city = true; log(g, `${pl.name}が都市を建てた（+1点、守り+1）`); checkWin(g); return 'update';
     case 'roll':
       if (g.phase !== 'roll') return false;

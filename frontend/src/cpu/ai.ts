@@ -3,7 +3,7 @@ import { winProb } from '../game/battle';
 import { BEATS, COST, GOAL, ICON, PIPS, RES } from '../game/constants';
 import { defaultRng } from '../game/random';
 import {
-  afford, canEvolve, citySpots, enemyGyms, evolve, fmtRes, hasRes, isCpu, log, makeOffer, pay, placeRoad, placeSettlement, rawRoad,
+  afford, canEvolve, citySpots, enemyGyms, evolve, fmtRes, gymsLeft, hasRes, isCpu, log, makeOffer, pay, placeRoad, placeSettlement, rawRoad,
   roadSpots, settleSpots, total, updateLR, vp,
 } from '../game/rules';
 import type { BuildKind, Bundle, GameState, Offer, Resource, Rng } from '../game/types';
@@ -59,7 +59,13 @@ export function pickBattleTarget(g: GameState, p: number, rng: Rng = defaultRng)
 /** 次に作りたい物 */
 export function aiGoals(g: GameState, p: number): BuildKind[] {
   const goals: BuildKind[] = []; if (citySpots(g, p).length) goals.push('city');
-  goals.push(settleSpots(g, p, false).length ? 'settlement' : 'road'); return goals;
+  const more = moreGymGoal(g, p, settleSpots(g, p, false).length > 0); if (more) goals.push(more);
+  return goals;
+}
+/** ジムを増やすための目標：建てられる場所があればジム、なければ道（ジムが上限のときは、どちらもねらわない） */
+function moreGymGoal(g: GameState, p: number, hasSpot: boolean): 'settlement' | 'road' | null {
+  if (hasSpot) return 'settlement';
+  return gymsLeft(g, p) > 0 ? 'road' : null;
 }
 /** 次に作りたい物に足りない資源（重み） */
 export function aiNeeds(g: GameState, p: number): Bundle {
@@ -107,7 +113,9 @@ export function aiAct(g: GameState, p: number, rng: Rng = defaultRng): boolean {
   if (afford(g, p, 'city') && cs.length) { const v = cs.reduce((b, x) => vScore(g, x, undefined, rng) > vScore(g, b, undefined, rng) ? x : b); pay(g, p, 'city'); g.V[v].city = true; updateLR(g); log(g, `${name}が都市を建てた`); return true; }
   const ss = settleSpots(g, p, false);
   if (afford(g, p, 'settlement') && ss.length) { const v = ss.reduce((b, x) => vScore(g, x, p, rng) > vScore(g, b, p, rng) ? x : b); pay(g, p, 'settlement'); placeSettlement(g, v, p); log(g, `${name}がジムを建てた`); return true; }
-  if (afford(g, p, 'road') && (ss.length === 0 || (g.lr !== p && rawRoad(g, p) >= 3 && rng() < .5))) {
+  /* 道：ジムを建てる場所が無いとき（ジムが上限なら建てても意味がないので、最長の道をねらうときだけ） */
+  const roadForGym = ss.length === 0 && gymsLeft(g, p) > 0;
+  if (afford(g, p, 'road') && (roadForGym || (g.lr !== p && rawRoad(g, p) >= 3 && rng() < .5))) {
     const rs = roadSpots(g, p);
     if (rs.length) { const e = rs.reduce((b, x) => roadScore(g, x, p, rng) > roadScore(g, b, p, rng) ? x : b); pay(g, p, 'road'); placeRoad(g, e, p); log(g, `${name}が道を建てた`); return true; }
   }
@@ -116,7 +124,7 @@ export function aiAct(g: GameState, p: number, rng: Rng = defaultRng): boolean {
     const o = aiTradeIdea(g, p); if (o) { g.cpuTradeTurn = g.turnN; if (makeOffer(g, p, 'all', o.give, o.want)) return true; }
   }
   const goals: ('city' | 'settlement' | 'road')[] = []; if (cs.length && pl.res.ore >= 2) goals.push('city');
-  goals.push(ss.length ? 'settlement' : 'road'); if (cs.length) goals.push('city');
+  const more = moreGymGoal(g, p, ss.length > 0); if (more) goals.push(more); if (cs.length) goals.push('city');
   for (const goal of goals) {
     const c = COST[goal]; const miss = RES.filter(r => pl.res[r] < (c[r] || 0));
     if (!miss.length || miss.length > 2) continue;
