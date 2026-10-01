@@ -11,6 +11,7 @@ import type { TileType } from '../game/types';
 import { Net } from '../net/online';
 import { CODE_LENGTH, normalizeRoomCode, roomCodeError } from '../net/protocol';
 import { store } from '../storage';
+import { initGuide, startGuide } from '../tutorial/guide';
 import { house, monSVG } from './art';
 import { $ } from './dom';
 import { syncMusic } from './music';
@@ -115,13 +116,15 @@ export function initTitle(): void {
   };
   $('#homeBtn').onclick = () => {
     const MODE = app.mode;
-    const msg = MODE === 'host' ? 'タイトルに戻りますか？\n（ホストが抜けるとオンライン対戦は終了します）' : MODE === 'guest' ? 'タイトルに戻りますか？\n（この対戦から抜けます）' : 'タイトルに戻りますか？\n（あとで「続きから」再開できます）';
+    const msg = MODE === 'tutorial' ? 'チュートリアルをやめて、タイトルに戻りますか？' : MODE === 'host' ? 'タイトルに戻りますか？\n（ホストが抜けるとオンライン対戦は終了します）' : MODE === 'guest' ? 'タイトルに戻りますか？\n（この対戦から抜けます）' : 'タイトルに戻りますか？\n（あとで「続きから」再開できます）';
     if (confirm(msg)) goTitle();
   };
   $('#again').onclick = playAgain;
   $('#overHome').onclick = goTitle;
 
   /* title screen */
+  initGuide();
+  $('#tTutorial').onclick = () => startGuide();
   $('#modeCpu').onclick = () => showTitle('cpu');
   $('#cpuBack').onclick = () => showTitle('menu');
   $('#cpuStart').onclick = () => {
@@ -185,4 +188,9 @@ export function initTitle(): void {
     showTitle('online');
     $('#tNote1').textContent = '招待リンクから開きました。ニックネームを入れて「参加する」を押してください。';
   } else showTitle('menu');
+  /* 読み物ページの「実際に操作して覚える」から来たとき（?guide=1）は、すぐにガイド付きチュートリアルを始める */
+  if (!room && new URLSearchParams(location.search).has('guide')) {
+    try { history.replaceState(null, '', location.pathname + location.hash); } catch { /* ignore */ }
+    startGuide();
+  }
 }

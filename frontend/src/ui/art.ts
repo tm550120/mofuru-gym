@@ -1,5 +1,6 @@
-/* SVG の絵（モフルと家） */
-import type { Mon, Resource } from '../game/types';
+/* SVG の絵（モフル・家・島） */
+import { COLORS, ICON, PIPS, TILE } from '../game/constants';
+import type { Board, Mon, Resource } from '../game/types';
 
 const MONC: Record<Resource | 'none', [string, string]> = {
   none: ['#cbb8ea', '#8e78b8'], wood: ['#7cc46a', '#3f7d3a'], brick: ['#f39a5a', '#b8542a'],
@@ -26,4 +27,29 @@ export function monSVG(m: Mon | undefined): string {
 export function house(x: number, y: number, c: string, city: boolean): string {
   const d = city ? `M${x - 12},${y + 8}V${y - 2}L${x - 7},${y - 8}L${x - 2},${y - 2}H${x + 12}V${y + 8}Z` : `M${x - 8},${y + 7}V${y - 2}L${x},${y - 10}L${x + 8},${y - 2}V${y + 7}Z`;
   return `<path d="${d}" fill="${c}" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/>`;
+}
+
+/** 島の絵：海・土地（資源の絵と数字）・道・ジム／都市。ゲームの盤面とチュートリアルの図で同じ絵を使う */
+export function islandSVG(b: Board): string {
+  let s = '';
+  const R = 246, sea = [...Array(6)].map((_, i) => `${R * Math.cos(Math.PI / 3 * i)},${R * Math.sin(Math.PI / 3 * i)}`).join(' ');
+  s += `<polygon points="${sea}" fill="var(--sea)" stroke="#f3e2b8" stroke-width="3" stroke-linejoin="round"/>`;
+  b.hexes.forEach(h => {
+    const pts = h.verts.map(v => `${b.V[v].x},${b.V[v].y}`).join(' ');
+    s += `<polygon points="${pts}" fill="${TILE[h.type]}" stroke="#f3e2b8" stroke-width="3" stroke-linejoin="round"/>`;
+    s += `<text x="${h.x}" y="${h.y - 22}" font-size="17" text-anchor="middle" dominant-baseline="central">${ICON[h.type]}</text>`;
+    if (h.num) {
+      const red = h.num === 6 || h.num === 8;
+      s += `<circle cx="${h.x}" cy="${h.y + 6}" r="15" fill="#fbf3de" stroke="rgba(0,0,0,.25)"/>`;
+      s += `<text x="${h.x}" y="${h.y + 4}" font-size="${red ? 15 : 14}" font-weight="800" text-anchor="middle" dominant-baseline="central" fill="${red ? '#c3302a' : '#2a2a2a'}">${h.num}</text>`;
+      const n = PIPS[h.num]; for (let i = 0; i < n; i++) s += `<circle cx="${h.x + (i - (n - 1) / 2) * 3.4}" cy="${h.y + 15}" r="1.2" fill="${red ? '#c3302a' : '#2a2a2a'}"/>`;
+    }
+  });
+  b.E.forEach(e => {
+    if (e.owner === null) return; const p = b.V[e.a], q = b.V[e.b];
+    s += `<line x1="${p.x}" y1="${p.y}" x2="${q.x}" y2="${q.y}" stroke="rgba(0,0,0,.35)" stroke-width="10" stroke-linecap="round"/>`;
+    s += `<line x1="${p.x}" y1="${p.y}" x2="${q.x}" y2="${q.y}" stroke="${COLORS[e.owner]}" stroke-width="6.5" stroke-linecap="round"/>`;
+  });
+  b.V.forEach(v => { if (v.owner !== null) s += house(v.x, v.y, COLORS[v.owner], v.city); });
+  return s;
 }

@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="ja" class="tut">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>はじめての人へ（チュートリアル）｜開拓の島 モフルジム</title>
+<meta name="description" content="「開拓の島 モフルジム」をはじめて遊ぶ人のためのチュートリアル。操作の手順、勝ち方のコツ、遊びながら見返せる早見表。">
+<meta name="theme-color" content="#2b7b8c">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<!--
+  チュートリアルの文章。ルール・コスト・ボタンの文言はゲームの実装に合わせてある。
+  実装を変えたときは、ここも合わせて直す：
+    コスト・得点・相性 … src/game/constants.ts　　ルール … src/game/rules.ts・battle.ts・actions.ts
+    画面の文言 … index.html・src/ui/render.ts・sheets.ts・battle.ts　　CPU の動き … src/cpu/ai.ts
+  図（data-fig・data-mon・data-house）は src/tutorial/main.ts が描く。
+-->
+<nav class="tnav" aria-label="ページ内の移動"><div>
+  <a class="pri" href="./index.html">← ゲームに戻る</a><span class="sp"></span><a href="#toc">目次</a><a href="#cheat">早見表</a>
+</div></nav>
+
+<div class="thero">
+  <div class="hmon" data-mon="none"></div>
+  <div class="tmons"><span data-mon="wood"></span><span data-mon="brick"></span><span data-mon="sheep"></span><span data-mon="wheat"></span><span data-mon="ore"></span></div>
+  <h1 class="ttl"><small>開拓の島 モフルジム</small>はじめての人へ</h1>
+  <p class="tsub">はじめて遊ぶ人のためのチュートリアルです。<br>操作の手順・勝ち方・早見表をまとめました。</p>
+</div>
+
+<main class="twrap">
+  <a class="tbtn pri" id="toGuide" href="./index.html?guide=1">👆 実際に操作して覚える<span>本物のゲーム画面で、案内どおりにタップして進めます</span></a>
+  <a class="tbtn" href="#start">🎮 操作を1から読む<span>ゲームを開いてから、最初の番が終わるまで</span></a>
+  <a class="tbtn" href="#win">🏆 どうやったら勝てる？<span>得点のしくみと、勝ち方のコツ</span></a>
+  <a class="tbtn" href="#cheat">📋 早見表<span>遊びながら、手順・コスト・相性をたしかめる</span></a>
+
+  <div class="card" id="toc">
+    <h3>目次</h3>
+    <ol class="toc">
+      <li><a href="#about"><span>どんなゲーム？</span></a></li>
+      <li><a href="#screen"><span>画面の見かた</span></a></li>
+      <li><a href="#start"><span>ゲームを始める</span></a></li>
+      <li><a href="#setup"><span>初期配置<small>ジムと道を2つずつ置く</small></span></a></li>
+      <li><a href="#turn"><span>自分の番の流れ<small>サイコロ → 資源 → 建設など → ターン終了</small></span></a></li>
+      <li><a href="#build"><span>道・ジム・都市を建てる</span></a></li>
+      <li><a href="#evolve"><span>モフルを進化させる</span></a></li>
+      <li><a href="#trade"><span>資源を交換する</span></a></li>
+      <li><a href="#seven"><span>7が出たら<small>手札を捨てる・ジムバトル</small></span></a></li>
+      <li><a href="#win"><span>どうやったら勝てる？</span></a></li>
+      <li><a href="#cheat"><span>早見表</span></a>
+        <ul class="chips">
+          <li><a href="#c-turn">1手番の流れ</a></li>
+          <li><a href="#c-cost">建設コスト</a></li>
+          <li><a href="#c-score">得点</a></li>
+          <li><a href="#c-dice">サイコロ</a></li>
+          <li><a href="#c-type">タイプ相性</a></li>
+          <li><a href="#c-battle">バトルの計算</a></li>
+          <li><a href="#c-seven">7のとき</a></li>
+          <li><a href="#c-icons">画面のマーク</a></li>
+        </ul>
+      </li>
+      <li><a href="#faq"><span>こまったときは</span></a></li>
+    </ol>
+  </div>
+
+  <!-- 1 -->
+  <section class="sec" id="about">
+    <h2><span class="no">1</span>どんなゲーム？</h2>
+    <p>島に道とジムを建てて資源を集め、モンスター「モフル」を進化させてジムバトルで競うボードゲームです。<b>先に10点を取った人の勝ち</b>です。</p>
+    <ul>
+      <li>「CPUと対戦」は、あなた＋CPU 2人の3人で遊びます（フレンド対戦は2〜3人）。</li>
+      <li>サイコロを振ると、ジムのまわりの土地から資源がもらえます。</li>
+      <li>資源を使って、道・ジム・都市を建てると点が入ります。</li>
+      <li>同じ資源3枚でモフルを進化させると、相手のジムにバトルを挑めます。</li>
+    </ul>
+    <table class="tb">
+      <thead><tr><th>点が入るもの</th><th class="c">得点</th></tr></thead>
+      <tbody>
+        <tr><th>ジム</th><td class="c"><b class="pt">1点</b></td></tr>
+        <tr><th>都市<small>ジムを都市にする</small></th><td class="c"><b class="pt">2点</b></td></tr>
+        <tr><th>最長の道<small>ジムとジムをつなぐ道がいちばん長い人</small></th><td class="c"><b class="pt">+2点</b></td></tr>
+        <tr><th>チャンピオン<small>バトルのバッジを3個集めた人</small></th><td class="c"><b class="pt">+2点</b></td></tr>
+      </tbody>
+    </table>
+    <h3>ゲームの流れ</h3>
+    <ol class="flow">
+      <li>初期配置<small>全員がジム2つと道2本を置く</small></li>
+      <li class="loop">自分の番<small>① サイコロを振る → ② 資源をもらう → ③ 建設・進化・交換 → ④ ターン終了</small></li>
+      <li class="loop">ほかの人の番<small>順番に同じことをくり返す（相手の番でも資源はもらえます）</small></li>
+      <li>だれかが10点に届いたら、その人の勝ち</li>
+    </ol>
+  </section>
+
+  <!-- 2 -->
+  <section class="sec" id="screen">
+    <h2><span class="no">2</span>画面の見かた</h2>
+    <p class="lead">ゲーム中の画面です（図は、初期配置が終わってあなたの最初の番が来たところ）。</p>
+    <figure class="fig">
+      <div class="mock" aria-hidden="true">
+        <div class="mk m-head" data-n="1"><b>🏝️ モフルジム</b><span class="icon-btn">?</span><span class="icon-btn">↻</span><span class="icon-btn">🔊</span><span class="icon-btn">🎵</span><span class="icon-btn">⌂</span></div>
+        <div class="mk m-players" data-n="2" data-fig="players"></div>
+        <div class="mk m-msg" data-n="3">あなたの番：サイコロを振ろう</div>
+        <div class="mk m-board" data-n="4" data-fig="screen"></div>
+        <div class="m-panel">
+          <div class="mk m-row1" data-n="5"><div class="m-dice">⚀⚀<small>2</small></div><div class="m-mymon"><span data-mon="none"></span><span>進化前</span></div><div class="m-res" data-fig="res"></div></div>
+          <div class="mk" data-n="6"><div class="m-log" data-fig="log"></div></div>
+          <div class="mk acts" data-n="7">
+            <div class="ab off">道<span>🌲🧱</span></div>
+            <div class="ab off">ジム<span>🌲🧱🐑🌾</span></div>
+            <div class="ab off">都市<span>🌾🌾🪨🪨🪨</span></div>
+            <div class="ab off">進化<span>同じ資源×3</span></div>
+            <div class="ab off">交換<span>銀行4:1</span></div>
+          </div>
+          <div class="mk m-main" data-n="8">🎲 サイコロを振る</div>
+        </div>
+      </div>
+      <ol class="mklist">
+        <li><b>上のボタン</b>：<span class="nw"><span class="k s">?</span> 遊び方と設定</span>　<span class="nw"><span class="k s">↻</span> 新しいゲーム</span>　<span class="nw"><span class="k s">🔊</span> 効果音</span>　<span class="nw"><span class="k s">🎵</span> BGM</span>　<span class="nw"><span class="k s">⌂</span> タイトルに戻る</span></li>
+        <li><b>プレイヤー</b>：枠に色がついている人が、いまの番です。★ 得点／🃏 手札の枚数／🏅 バッジの数／🛤 ジムとジムをつなぐ道の長さ／「1番」は手番の順。</li>
+        <li><b>メッセージ</b>：いま何をすればよいかが出ます。まよったら、まずここを読みます。相手の番のあいだは、その人の色になります。</li>
+        <li><b>盤面（島）</b>：ジムや道を置くときは、ここをタップします。</li>
+        <li><b>サイコロの目・自分のモフル・手札</b>：手札は、持っている資源の枚数です。</li>
+        <li><b>出来事</b>：直前の出来事が出ます。タップすると「これまでの出来事」（履歴）が開きます。</li>
+        <li><b>建設・進化・交換のボタン</b>：下の小さい絵は、必要な資源です。うすいときは押せません。</li>
+        <li><b>メインボタン</b>：<span class="k">🎲 サイコロを振る</span> <span class="k">ターン終了</span> など、場面に合わせて変わります。</li>
+      </ol>
+    </figure>
+
+    <h3>島（盤面）の見かた</h3>
+    <ul>
+      <li><b>土地</b>は19マス。土地の絵が、そこでもらえる資源です。</li>
+    </ul>
+    <table class="tb">
+      <thead><tr><th>土地の絵</th><th>もらえる資源</th><th class="c">マスの数</th></tr></thead>
+      <tbody>
+        <tr><td class="em">🌲</td><th>木材</th><td class="c">4</td></tr>
+        <tr><td class="em">🧱</td><th>レンガ</th><td class="c">3</td></tr>
+        <tr><td class="em">🐑</td><th>羊毛</th><td class="c">4</td></tr>
+        <tr><td class="em">🌾</td><th>小麦</th><td class="c">4</td></tr>
+        <tr><td class="em">🪨</td><th>鉱石</th><td class="c">3</td></tr>
+        <tr><td class="em">🏜️</td><th>砂漠<small>何ももらえません</small></th><td class="c">1</td></tr>
+      </tbody>
+    </table>
+    <ul>
+      <li><b>数字</b>：サイコロ2個の合計がその数字になると、資源が出ます。数字の下の点が多いほど出やすく、<span class="red">赤い 6 と 8</span> がいちばん出やすい数字です。</li>
+      <li><b>交差点</b>（土地の角）はジムを置く場所、<b>辺</b>（土地のふち）は道を置く場所です。</li>
+      <li><span class="hs" data-house="gym"></span> がジム、<span class="hs" data-house="city"></span> が都市、太い線が道です。色は持ち主を表します（「CPUと対戦」では、あなたが赤・CPUが青と橙）。</li>
+    </ul>
+  </section>
+
+  <!-- 3 -->
+  <section class="sec" id="start">
+    <h2><span class="no">3</span>ゲームを始める</h2>
+    <p class="lead">まずは CPU と対戦してみましょう（ひとりで遊べます）。</p>
+    <ol class="steps">
+      <li><b>「CPUと対戦」を選ぶ</b>ゲームを開くとタイトル画面が出ます。<span class="k">🤖 CPUと対戦</span> をタップします。</li>
+      <li><b>設定を選ぶ</b>そのままでも始められます。
+        <ul>
+          <li>「あなたの手番（何番目に行うか）」：<span class="k s">先攻</span> <span class="k s">2番目</span> <span class="k s">3番目</span> <span class="k s">ランダム</span></li>
+          <li>「進行スピード」：<span class="k s">ゆっくり</span> <span class="k s">ふつう</span> <span class="k s">はやい</span>（CPUの動きや演出の速さ）</li>
+          <li>「効果音（バトル）」「BGM」：オン／オフ</li>
+        </ul>
+      </li>
+      <li><b>始める</b><span class="k">新しいゲームを始める</span> をタップします。島が現れて、初期配置が始まります。</li>
+    </ol>
+    <div class="tip"><b>はじめての人は</b>進行スピードを <span class="k s">ゆっくり</span> にすると、CPUの動きを目で追いやすくなります。スピードはゲーム中でも右上の <span class="k s">?</span> から変えられます。</div>
+    <div class="tip"><b>途中でやめても大丈夫</b>「CPUと対戦」のゲームは、操作のたびに端末へ保存されます。右上の <span class="k s">⌂</span> でタイトルに戻っても、次は <span class="k">▶ 続きから</span> で同じ場面から再開できます。</div>
+  </section>
+
+  <!-- 4 -->
+  <section class="sec" id="setup">
+    <h2><span class="no">4</span>初期配置</h2>
+    <p>最初に、全員が<b>ジムを2つ・道を2本</b>ずつ置きます。ここでは資源は使いません。</p>
+    <ol class="steps">
+      <li><b>1つ目のジムを置く</b>メッセージに <span class="say">あなたの番：ジムを置く交差点をタップ（1つ目）</span> と出たら、白い点が光っている交差点のどれかをタップします。
+        <figure class="fig"><div class="bd" data-fig="setup-gym" role="img" aria-label="島のすべての交差点に白い点が出ている図"></div><figcaption>白い点が、ジムを置ける交差点です。</figcaption></figure>
+      </li>
+      <li><b>つながる道を置く</b>メッセージが <span class="say">あなたの番：つながる道を置く辺をタップ</span> に変わります。いま置いたジムから伸びる白い点線のどれかをタップします。
+        <figure class="fig"><div class="bd" data-fig="setup-road" role="img" aria-label="置いたジムのまわりの辺に白い点線が出ている図"></div><figcaption>白い点線が、道を置ける辺です。</figcaption></figure>
+      </li>
+      <li><b>ほかの人が置くのを待つ</b>CPUも同じように置きます。順番は、手番の順に1つ目 → 逆の順に2つ目です（あなたが先攻なら、あなた → 青 → 橙 → 橙 → 青 → あなた）。</li>
+      <li><b>2つ目のジムと道を置く</b>手順は1つ目と同じです（メッセージは「…（2つ目）」）。<b>2つ目のジムを置くと、そのジムに接する土地の資源を1枚ずつもらえます</b>（砂漠はもらえません。最大3枚）。</li>
+      <li><b>ゲーム開始</b>全員が置き終わると、手番が1番の人から始まります。</li>
+    </ol>
+    <div class="warn"><b>タップするとすぐに置かれます</b>ジム・道・都市は、盤面をタップした時点で決まります。やり直しはできないので、場所をよく見てからタップしましょう。</div>
+    <div class="tip"><b>どこに置けばいい？</b>ジムは、ほかのジム・都市のとなりの交差点には置けません（置ける場所だけに白い点が出ます）。おすすめの置き方は <a href="#win-setup">初期配置のコツ</a> へ。</div>
+  </section>
+
+  <!-- 5 -->
+  <section class="sec" id="turn">
+    <h2><span class="no">5</span>自分の番の流れ</h2>
+    <ol class="steps">
+      <li><b>サイコロを振る</b>メッセージに <span class="say">あなたの番：サイコロを振ろう</span> と出ます。いちばん下の <span class="k">🎲 サイコロを振る</span> をタップします。</li>
+      <li><b>資源をもらう</b>サイコロ2個の合計と同じ数字の土地に接するジムは1枚、都市は2枚、その土地の資源をもらえます。
+        <ul>
+          <li>全員が対象です。<b>相手の番でも</b>、数字が合えばあなたも資源をもらえます。</li>
+          <li>もらった資源は、手札の欄が黄色く光ります。出来事には「🎲8：あなた🌲、CPU 青🧱×2」のように出ます（だれももらえないときは「収穫なし」）。</li>
+          <li>7 が出たときは資源は出ません（→ <a href="#seven">7が出たら</a>）。</li>
+        </ul>
+      </li>
+      <li><b>建設・進化・交換をする</b>メッセージが <span class="say">建設・進化・交換するか、ターン終了（2/10点）</span> に変わります。できることのボタンは濃く、できないことのボタンはうすくなります。好きな順で、何回でもできます。
+        <figure class="fig">
+          <div class="acts" aria-hidden="true">
+            <div class="ab">道<span>🌲🧱</span></div>
+            <div class="ab">ジム<span>🌲🧱🐑🌾</span></div>
+            <div class="ab">都市<span>🌾🌾🪨🪨🪨</span></div>
+            <div class="ab">進化<span>同じ資源×3</span></div>
+            <div class="ab">交換<span>銀行4:1</span></div>
+          </div>
+          <figcaption>ボタンの下の絵は、必要な資源です。くわしくは <a href="#build">建てる</a>・<a href="#evolve">進化</a>・<a href="#trade">交換</a> へ。</figcaption>
+        </figure>
+      </li>
+      <li><b>ターン終了</b>やることが終わったら（何もしなくてもかまいません）、<span class="k">ターン終了</span> をタップします。次の人の番になります。</li>
+    </ol>
+    <div class="tip"><b>最初の番は？</b>手札が少ないので、できることはあまりありません。🌲と🧱が1枚ずつあれば道を1本置き、なければそのまま <span class="k">ターン終了</span> で大丈夫です。</div>
+    <h3>相手の番のあいだ</h3>
+    <ul>
+      <li>メッセージは <span class="say">CPU 青の番…</span> のように出て、メインボタンは押せません。CPUの動きは、画面の上のほうに少しのあいだ表示されます。</li>
+      <li>相手から交換を提案されたら、受けるか断るかを選びます（→ <a href="#trade-in">提案されたとき</a>）。</li>
+      <li>7 が出て手札が多いときは、捨てる資源を選びます（→ <a href="#seven">7が出たら</a>）。</li>
+    </ul>
+  </section>
+
+  <!-- 6 -->
+  <section class="sec" id="build">
+    <h2><span class="no">6</span>道・ジム・都市を建てる</h2>
+    <p>自分の番で、サイコロを振ったあとに建てられます。どれも<b>「ボタンをタップ → 盤面の白く光る場所をタップ」</b>の2手です。</p>
+    <ul>
+      <li>ボタンがうすいときは、資源が足りないか、置ける場所がありません。</li>
+      <li>やめるときは、同じボタンをもう一度タップします。</li>
+    </ul>
+
+    <h3>道　<span class="em">🌲🧱</span></h3>
+    <ol class="steps">
+      <li><span class="k s">道</span> をタップします（メッセージ：<span class="say">道を置く辺をタップ</span>）。</li>
+      <li>白い点線が出た辺をタップします。</li>
+    </ol>
+    <ul>
+      <li>自分のジム・都市・道につながる辺に置けます。相手のジムや都市を通りぬけて、その先へ伸ばすことはできません。</li>
+      <li>資源が残っていれば、続けて次の辺をタップして何本でも置けます。</li>
+      <li>道そのものに点はありませんが、次のジムを建てる場所へ進むために必要です。長くつなぐと「最長の道」（+2点）もねらえます。</li>
+    </ul>
+
+    <h3>ジム　<span class="em">🌲🧱🐑🌾</span>　<b class="pt">1点</b></h3>
+    <ol class="steps">
+      <li><span class="k s">ジム</span> をタップします（メッセージ：<span class="say">ジムを置く交差点をタップ</span>）。</li>
+      <li>白い点が出た交差点をタップします。</li>
+    </ol>
+    <p>ジムを建てられるのは、次の2つを両方みたす交差点です。</p>
+    <ul>
+      <li>自分の道がつながっている</li>
+      <li>となりの交差点に、建物（自分のものも相手のものも）がない</li>
+    </ul>
+    <figure class="fig"><div class="bd" data-fig="build-gym" role="img" aria-label="自分のジムから道を2本伸ばした先の交差点に白い点が出ていて、ジムのとなりの交差点には×がついている図"></div><figcaption>✕ はジムのとなりなので建てられません。道を2本伸ばした先（白い点）に建てられます。</figcaption></figure>
+
+    <h3>都市　<span class="em">🌾🌾🪨🪨🪨</span>　<b class="pt">2点</b></h3>
+    <ol class="steps">
+      <li><span class="k s">都市</span> をタップします（メッセージ：<span class="say">都市にするジムをタップ</span>）。</li>
+      <li>白い輪が出た自分のジムをタップします。ジム <span class="hs" data-house="gym"></span> が都市 <span class="hs" data-house="city"></span> に変わります。</li>
+    </ol>
+    <ul>
+      <li>得点が1点 → 2点になります。</li>
+      <li>もらえる資源が1枚 → 2枚になります。</li>
+      <li>バトルを挑まれたとき、守る側のボーナスが +1 されます。</li>
+    </ul>
+  </section>
+
+  <!-- 7 -->
+  <section class="sec" id="evolve">
+    <h2><span class="no">7</span>モフルを進化させる</h2>
+    <p><b>同じ資源3枚</b>で、自分のモフルを進化させられます。使った資源でタイプが決まります。</p>
+    <ol class="steps">
+      <li><span class="k s">進化</span> をタップします（サイコロの横にいる自分のモフルをタップしても開きます）。</li>
+      <li>「モフルを進化させる」の画面で、進化先を1つ選びます。3枚以上持っている資源のものだけ選べます。</li>
+      <li><span class="k">進化する</span> をタップします。</li>
+    </ol>
+    <table class="tb">
+      <thead><tr><th colspan="2">進化先</th><th>使う資源</th><th>強い／弱い</th></tr></thead>
+      <tbody>
+        <tr><td class="mi" data-mon="wood"></td><th>草<small>リーフモフル</small></th><td class="em">🌲×3</td><td>岩に強い<small>炎に弱い</small></td></tr>
+        <tr><td class="mi" data-mon="brick"></td><th>炎<small>ブレイズモフル</small></th><td class="em">🧱×3</td><td>草に強い<small>風に弱い</small></td></tr>
+        <tr><td class="mi" data-mon="sheep"></td><th>風<small>クラウドモフル</small></th><td class="em">🐑×3</td><td>炎に強い<small>光に弱い</small></td></tr>
+        <tr><td class="mi" data-mon="wheat"></td><th>光<small>サンモフル</small></th><td class="em">🌾×3</td><td>風に強い<small>岩に弱い</small></td></tr>
+        <tr><td class="mi" data-mon="ore"></td><th>岩<small>ロックモフル</small></th><td class="em">🪨×3</td><td>光に強い<small>草に弱い</small></td></tr>
+      </tbody>
+    </table>
+    <h3>進化するとできること</h3>
+    <ul>
+      <li>自分が 7 を出したとき、相手のジムにバトルを挑めます（進化前は挑めません）。</li>
+      <li>バトルで +2 のボーナスがつきます（挑むときも、守るときも）。</li>
+      <li>相手のタイプに強ければ、さらに +1 されます。</li>
+    </ul>
+    <div class="tip"><b>おぼえておくこと</b>
+      <ul>
+        <li>進化しても得点は増えません。</li>
+        <li>進化しているあいだは、別のタイプに変えられません。バトルに負けて進化前に戻ったら、もう一度進化できます。</li>
+        <li>相手のタイプは、プレイヤー欄のモフルの頭の飾り（葉・炎・雲・星・結晶）で見分けます。</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section class="sec" id="trade">
+    <h2><span class="no">8</span>資源を交換する</h2>
+    <p>自分の番で、サイコロを振ったあとに何回でもできます。<span class="k s">交換</span> をタップして、上のタブで相手を選びます。画面の上には「あなたの手札」が出て、選ぶと交換後の枚数（→）も表示されます。</p>
+
+    <h3>銀行と交換（4枚 → 1枚）</h3>
+    <ol class="steps">
+      <li>タブの <span class="k s">🏦 銀行と交換</span> をタップします。</li>
+      <li>「出す資源（同じものを4枚）」から、4枚以上持っている資源を1つ選びます。</li>
+      <li>「もらう資源（1枚）」から、ほしい資源を1つ選びます。</li>
+      <li><span class="k">交換する</span> をタップします。</li>
+    </ol>
+
+    <h3>プレイヤーと交換（提案する）</h3>
+    <ol class="steps">
+      <li>タブの <span class="k s">🤝 プレイヤーと交換</span> をタップします。</li>
+      <li>「相手」を選びます：<span class="k s">みんな</span> か、相手1人（<span class="k s">CPU 青</span> など）。</li>
+      <li>「あなたが出す」「あなたがほしい」の枚数を、<span class="k s">＋</span> <span class="k s">−</span> で決めます。同じ資源を両方に入れることはできません。</li>
+      <li><span class="k">提案する</span> をタップします。「🤝 交換を提案中」の画面に、相手の返事（考え中…／断った）が出ます。</li>
+      <li>だれかが受けると、すぐに交換されます（「みんな」に提案したときは、最初に受けた人と成立）。全員に断られると成立しません。待つのをやめるときは <span class="k s">提案を取り下げる</span>。</li>
+    </ol>
+
+    <h3 id="trade-in">提案されたとき</h3>
+    <p>「🤝 CPU 青から交換の提案」のような画面が開き、「あなたがもらう」「あなたが渡す」資源が出ます。<span class="k">受ける</span> か <span class="k s">断る</span> をタップします。受けるとすぐに交換されます。渡す資源が足りないときは受けられません。</p>
+  </section>
+
+  <!-- 9 -->
+  <section class="sec" id="seven">
+    <h2><span class="no">9</span>7が出たら</h2>
+    <p>サイコロの合計が 7 のときは、資源は出ません。かわりに、次の2つが順番に起こります。</p>
+
+    <h3>① 手札が8枚以上の人は、半分を捨てる</h3>
+    <ul>
+      <li>だれが 7 を出しても、手札が8枚以上の人は全員が対象です。捨てる枚数は半分（端数は切り捨て。9枚なら4枚）。</li>
+      <li>自分が対象になると「🎲7！ 手札を捨てる」の画面が開きます。<span class="k s">＋</span> <span class="k s">−</span> で捨てる資源を選び、<span class="k">捨てる</span> をタップします。</li>
+    </ul>
+
+    <h3>② 7を出した人が進化済みなら、ジムバトルを挑める</h3>
+    <ol class="steps">
+      <li>メッセージに <span class="say">⚔️ 挑戦するジムをタップ（％は勝率）</span> と出て、相手のジムと都市に白い輪と勝率が出ます。
+        <figure class="fig"><div class="bd" data-fig="battle-pick" role="img" aria-label="相手のジムと都市に白い輪と勝率のパーセントが出ている図"></div><figcaption>例：あなたが炎タイプ、CPU 青が草タイプ（あなたが有利）、CPU 橙は進化前のとき。都市は守りが固いので勝率が下がります。</figcaption></figure>
+      </li>
+      <li>挑戦するジムをタップします。島のどこにあるジムでも選べます。やめておくときは <span class="k">挑戦しない</span> をタップします。</li>
+      <li>「ジムバトル」の画面で、挑戦者とジム（守る側）がサイコロを1個ずつ振ります。結果を見たら <span class="k">OK</span> をタップします。</li>
+    </ol>
+    <p>自分のモフルが進化前のときは、7 を出してもバトルはありません（①だけ起こります）。</p>
+
+    <h3>バトルの勝ち負け</h3>
+    <div class="calc">サイコロ1個の目 ＋ ボーナス の合計が大きいほうの勝ち<small>同点のときは、ジム（守る側）の勝ち</small></div>
+    <table class="tb">
+      <thead><tr><th>ボーナス</th><th class="c">加点</th><th>つく条件</th></tr></thead>
+      <tbody>
+        <tr><th>進化</th><td class="c"><b>+2</b></td><td>モフルが進化済み</td></tr>
+        <tr><th>相性</th><td class="c"><b>+1</b></td><td>相手のタイプに強い</td></tr>
+        <tr><th>都市</th><td class="c"><b>+1</b></td><td>挑まれたのが都市（守る側だけ）</td></tr>
+      </tbody>
+    </table>
+    <figure class="fig">
+      <div class="m-battle" aria-hidden="true">
+        <h4>ジムバトル</h4>
+        <div class="bgrid">
+          <div class="side win" style="--c:#d9453a"><div class="nm">あなた<br><small style="font-weight:500;color:var(--sub)">挑戦者</small></div><span data-mon="brick"></span><div class="mn">ブレイズモフル（炎）</div><div class="dv">⚂</div><div class="bn">進化+2 相性+1</div><div class="tt">6</div></div>
+          <div class="vs">VS</div>
+          <div class="side" style="--c:#2f6fd6"><div class="nm">CPU 青<br><small style="font-weight:500;color:var(--sub)">ジム</small></div><span data-mon="wood"></span><div class="mn">リーフモフル（草）</div><div class="dv">⚂</div><div class="bn">進化+2</div><div class="tt">5</div></div>
+        </div>
+        <p class="res">あなたの勝ち！ バッジ獲得（1個）。CPU 青から🌲木材を1枚奪った。CPU 青のリーフモフルはモフルに戻った。</p>
+      </div>
+      <figcaption>例：どちらも出目は3。あなたは 3＋2＋1＝6、CPU 青は 3＋2＝5 なので、あなたの勝ちです。</figcaption>
+    </figure>
+    <table class="tb">
+      <thead><tr><th></th><th>起こること</th></tr></thead>
+      <tbody>
+        <tr><th>勝った人</th><td>バッジを1個もらう。相手の資源を1枚うばう（どの資源かはランダム）。</td></tr>
+        <tr><th>負けた人</th><td>モフルが進化前に戻る。資源を1枚うばわれる。</td></tr>
+      </tbody>
+    </table>
+    <ul>
+      <li>挑戦者でも守る側でも、勝ったほうがバッジをもらえます。</li>
+      <li>負けても、ジムや都市がなくなることはありません。</li>
+      <li>相手が 7 を出して進化済みなら、あなたのジムが挑戦されることがあります。操作はいらず、自動で守ります。</li>
+    </ul>
+
+    <h3>チャンピオン（+2点）</h3>
+    <p>バッジを最初に3個集めた人がチャンピオンになり、+2点されます（プレイヤー欄に「王者」と出ます）。その後、チャンピオンより多くバッジを集めた人が現れると、その人に移ります。</p>
+  </section>
+
+  <!-- 10 -->
+  <section class="sec" id="win">
+    <h2><span class="no">10</span>どうやったら勝てる？</h2>
+    <p><b>だれかが10点に届いた瞬間に、その人の勝ち</b>です。最初からジムが2つあるので、スタートは2点。あと8点を集めます。</p>
+    <table class="tb">
+      <thead><tr><th>点が入るもの</th><th class="c">得点</th><th>必要なもの</th></tr></thead>
+      <tbody>
+        <tr><th>ジム</th><td class="c"><b class="pt">1点</b></td><td class="em">🌲🧱🐑🌾</td></tr>
+        <tr><th>都市</th><td class="c"><b class="pt">2点</b></td><td>ジム ＋ <span class="em">🌾🌾🪨🪨🪨</span></td></tr>
+        <tr><th>最長の道</th><td class="c"><b class="pt">+2点</b></td><td>ジムとジムをつなぐ道が5本以上で、いちばん長い</td></tr>
+        <tr><th>チャンピオン</th><td class="c"><b class="pt">+2点</b></td><td>バッジ3個以上で、いちばん多い</td></tr>
+      </tbody>
+    </table>
+
+    <h3>10点の作り方（例）</h3>
+    <table class="tb">
+      <thead><tr><th>ねらい</th><th>内訳</th></tr></thead>
+      <tbody>
+        <tr><th>建物だけ</th><td>都市4（8点）＋ ジム2（2点）</td></tr>
+        <tr><th>道も使う</th><td>都市3（6点）＋ ジム2（2点）＋ 最長の道（2点）</td></tr>
+        <tr><th>バトルも使う</th><td>都市2（4点）＋ ジム2（2点）＋ 最長の道（2点）＋ チャンピオン（2点）</td></tr>
+      </tbody>
+    </table>
+    <p>建物だけで10点にするには、建物が5〜6つ必要です（都市5つでも10点）。最長の道やチャンピオンの +2点を取ると、そのぶん少ない建物で届きます。</p>
+    <div class="tip"><b>基本の進め方</b>ジムを増やす → 都市にする → 余った資源で進化して守りを固める → 最長の道かチャンピオンで +2点。</div>
+
+    <h3 id="win-setup">コツ① 初期配置</h3>
+    <ul>
+      <li><b>3つの土地に接する交差点</b>を選びます。海ぞいや砂漠の角は、接する土地が少なくなります。</li>
+      <li><b>点の多い数字</b>の土地を選びます。赤い 6・8 がいちばん出やすく、次が 5・9 です。2 と 12 はめったに出ません（→ <a href="#c-dice">サイコロの出やすさ</a>）。</li>
+      <li><b>資源の種類をばらけさせます</b>。序盤の道とジムには 🌲🧱 が欠かせません。🧱 と 🪨 の土地は3マスずつしかないので、取れるなら早めに。</li>
+      <li><b>2つ目のジムは、もらえる資源も見て</b>選びます。接する土地の資源を1枚ずつもらえるので、🌲と🧱がそろえば最初の番に道を置けます。</li>
+      <li><b>道は、次にジムを建てたい交差点の方向へ</b>。ジムは2辺先に建てるので、そこが空いているかも見ておきます。</li>
+    </ul>
+
+    <h3>コツ② 資源の使いみち</h3>
+    <ul>
+      <li><b>序盤は 道 → ジム</b>。ジムが増えるほど、接する数字が増えて、もらえる資源が増えます。</li>
+      <li><b>🌾 と 🪨 がたまったら都市</b>。資源が2倍、得点が+1、守りも+1 と、いいことが3つあります。</li>
+      <li><b>手札は7枚以下で番を終える</b>。7 は6回に1回ほど出ます。8枚以上持っていると半分を失うので、たまったら建てる・進化する・交換するで使いましょう。</li>
+      <li>同じ資源が3枚余ったら進化、4枚余ったら銀行と交換、が目安です。</li>
+    </ul>
+
+    <h3>コツ③ 進化とバトルのタイミング</h3>
+    <ul>
+      <li><b>進化は守りにも効きます</b>。進化前のジムは、進化済みの相手に挑まれると相手の勝率が 72% もあります。こちらも進化済みなら 42%、さらに都市なら 28% まで下がります。</li>
+      <li><b>CPUは、勝率が 40% より低いジムには挑戦してきません</b>。進化して都市を増やすほど、ねらわれにくくなります。</li>
+      <li><b>挑むかどうかは％で決めます</b>。進化前の相手のジムは 72%、都市は 58%。勝率が低いときは <span class="k">挑戦しない</span> も立派な手です。負けると進化前に戻り、資源を1枚取られ、相手にバッジを渡してしまいます。</li>
+      <li><b>バッジ3個でチャンピオン（+2点）</b>。守って勝ってもバッジは増えます。</li>
+      <li>建設に使う資源をくずしてまで急いで進化する必要はありません。同じ資源が余ったときが進化のしどきです。</li>
+    </ul>
+
+    <h3>コツ④ タイプ相性</h3>
+    <figure class="fig"><div class="ring" data-fig="types" role="img" aria-label="タイプ相性の図。風は炎に強く、炎は草に強く、草は岩に強く、岩は光に強く、光は風に強い"></div><figcaption>風 → 炎 → 草 → 岩 → 光 → 風（矢印の左が右に強い）。強いタイプで戦うと +1。</figcaption></figure>
+    <ul>
+      <li>相手のモフルを見て、<b>相手に強いタイプ</b>に進化すると有利です。進化の画面にも「強い：◯／弱い：◯」と出ます。</li>
+      <li>タイプは使う資源で決まります。ねらうタイプがあるときは、その資源を3枚ためます。</li>
+      <li>自分に強いタイプの相手には、挑まないのが安全です（勝率は 28% 以下）。</li>
+    </ul>
+
+    <h3>コツ⑤ 最長の道</h3>
+    <figure class="fig"><div class="bd" data-fig="longest" role="img" aria-label="自分のジムから別の自分のジムまで、道が5本つながっている図"></div><figcaption>ジムからジムまで道が5本。これで「最長の道」の対象になります（プレイヤー欄の 🛤 が 5）。</figcaption></figure>
+    <ul>
+      <li>数えるのは、<b>自分のジム（都市）から、別の自分のジム（都市）まで</b>、自分の道だけでつながった本数です。行き止まりの道は数えません。</li>
+      <li>5本以上で、いちばん長い人が +2点。同じ長さでは移らないので、うばうには1本でも長くします。</li>
+      <li>道のとちゅうに相手の建物があると、そこでとぎれます。</li>
+      <li>いまの長さは、プレイヤー欄の 🛤 で見られます。</li>
+    </ul>
+
+    <h3>コツ⑥ 交換</h3>
+    <ul>
+      <li>銀行は 4枚 → 1枚 と高くつきます。あと1枚足りないときは、まずプレイヤーに 1枚 ↔ 1枚 で提案してみましょう。</li>
+      <li>CPUは、自分が得をするときだけ受けます。点数が高い人（あと少しで勝ちそうな人）からの提案は、受けてもらいにくくなります。</li>
+      <li>CPUから提案が来るのは、CPUが「あと1枚で建てられる」ときです。相手の ★ が高いときは、断るのも手です。</li>
+    </ul>
+  </section>
+
+  <!-- 11 -->
+  <section class="sec" id="cheat">
+    <h2><span class="no">11</span>早見表</h2>
+    <p class="lead">遊びながら見返すためのまとめです。</p>
+
+    <h3 id="c-turn">1手番の流れ</h3>
+    <ol class="mini">
+      <li><span class="k">🎲 サイコロを振る</span></li>
+      <li>資源をもらう（7 のときは → <a href="#c-seven">7のとき</a>）</li>
+      <li>建設・進化・交換（好きな順で、何回でも）</li>
+      <li><span class="k">ターン終了</span></li>
+    </ol>
+
+    <h3 id="c-cost">建設コスト</h3>
+    <table class="tb">
+      <thead><tr><th>すること</th><th>必要な資源</th><th>効果</th></tr></thead>
+      <tbody>
+        <tr><th>道</th><td class="em">🌲🧱</td><td>ジムを建てる場所を広げる</td></tr>
+        <tr><th>ジム</th><td class="em">🌲🧱🐑🌾</td><td><b class="pt">1点</b>・資源1枚ずつ</td></tr>
+        <tr><th>都市</th><td class="em">🌾🌾<br>🪨🪨🪨</td><td><b class="pt">2点</b>・資源2枚ずつ・守り+1</td></tr>
+        <tr><th>進化</th><td class="nw">同じ資源×3</td><td>バトル+2・7 で挑戦できる</td></tr>
+        <tr><th>銀行と交換</th><td class="nw">同じ資源×4</td><td>好きな資源1枚</td></tr>
+      </tbody>
+    </table>
+    <ul>
+      <li>道：自分のジム・都市・道につながる辺。</li>
+      <li>ジム：自分の道がつながっていて、となりの交差点に建物がない交差点。</li>
+      <li>都市：自分のジム。</li>
+    </ul>
+
+    <h3 id="c-score">得点（10点で勝ち）</h3>
+    <table class="tb">
+      <tbody>
+        <tr><th>ジム</th><td><b class="pt">1点</b></td></tr>
+        <tr><th>都市</th><td><b class="pt">2点</b></td></tr>
+        <tr><th>最長の道</th><td><b class="pt">+2点</b><small>ジムとジムをつなぐ道が5本以上で、いちばん長い人（同じ長さなら先に取った人のまま）</small></td></tr>
+        <tr><th>チャンピオン</th><td><b class="pt">+2点</b><small>バッジを最初に3個集めた人（より多く集めた人が現れると移る）</small></td></tr>
+      </tbody>
+    </table>
+
+    <h3 id="c-dice">サイコロの出やすさ</h3>
+    <table class="tb">
+      <thead><tr><th>数字</th><th>数字の下の点</th><th class="c">36回のうち<br>（それぞれ）</th></tr></thead>
+      <tbody>
+        <tr><th><span class="red">6・8</span></th><td class="pips">●●●●●</td><td class="c">5回</td></tr>
+        <tr><th>5・9</th><td class="pips">●●●●</td><td class="c">4回</td></tr>
+        <tr><th>4・10</th><td class="pips">●●●</td><td class="c">3回</td></tr>
+        <tr><th>3・11</th><td class="pips">●●</td><td class="c">2回</td></tr>
+        <tr><th>2・12</th><td class="pips">●</td><td class="c">1回</td></tr>
+        <tr><th>7</th><td>土地なし（資源は出ない）</td><td class="c">6回</td></tr>
+      </tbody>
+    </table>
+
+    <h3 id="c-type">タイプ相性</h3>
+    <figure class="fig"><div class="ring" data-fig="types" role="img" aria-label="タイプ相性の図。風は炎に強く、炎は草に強く、草は岩に強く、岩は光に強く、光は風に強い"></div><figcaption>風 → 炎 → 草 → 岩 → 光 → 風（矢印の左が右に強い）</figcaption></figure>
+    <table class="tb">
+      <thead><tr><th>タイプ</th><th>使う資源</th><th>強い</th><th>弱い</th></tr></thead>
+      <tbody>
+        <tr><th>草</th><td class="em">🌲×3</td><td>岩</td><td>炎</td></tr>
+        <tr><th>炎</th><td class="em">🧱×3</td><td>草</td><td>風</td></tr>
+        <tr><th>風</th><td class="em">🐑×3</td><td>炎</td><td>光</td></tr>
+        <tr><th>光</th><td class="em">🌾×3</td><td>風</td><td>岩</td></tr>
+        <tr><th>岩</th><td class="em">🪨×3</td><td>光</td><td>草</td></tr>
+      </tbody>
+    </table>
+
+    <h3 id="c-battle">バトルの計算</h3>
+    <div class="calc">合計 ＝ サイコロ1個 ＋ 進化 +2 ＋ 相性 +1 ＋ 都市 +1<small>都市 +1 は守る側だけ。同点はジム（守る側）の勝ち</small></div>
+    <table class="tb">
+      <thead><tr><th>相手（守る側）のモフル</th><th class="c">ジムに挑む</th><th class="c">都市に挑む</th></tr></thead>
+      <tbody>
+        <tr><th>進化前</th><td class="c"><b>72%</b></td><td class="c"><b>58%</b></td></tr>
+        <tr><th>進化済み<small>こちらが相性で有利</small></th><td class="c"><b>58%</b></td><td class="c"><b>42%</b></td></tr>
+        <tr><th>進化済み<small>相性なし</small></th><td class="c"><b>42%</b></td><td class="c"><b>28%</b></td></tr>
+        <tr><th>進化済み<small>相手が相性で有利</small></th><td class="c"><b>28%</b></td><td class="c"><b>17%</b></td></tr>
+      </tbody>
+    </table>
+    <p class="lead">挑戦者の勝率です（挑戦者はかならず進化済み）。ゲーム中は、挑戦先を選ぶときにジムごとの勝率が出ます。</p>
+    <ul>
+      <li>勝ち：バッジ+1、相手の資源を1枚うばう。</li>
+      <li>負け：進化前に戻る、資源を1枚うばわれる。</li>
+    </ul>
+
+    <h3 id="c-seven">7のとき</h3>
+    <ol class="mini">
+      <li>資源は出ない。</li>
+      <li>手札が8枚以上の人は全員、半分（切り捨て）を自分で選んで捨てる。</li>
+      <li>7 を出した人が進化済みなら、相手のジムにバトルを挑める（<span class="k">挑戦しない</span> でやめてもよい）。</li>
+    </ol>
+
+    <h3 id="c-icons">画面のマーク</h3>
+    <table class="tb">
+      <tbody>
+        <tr><th>★</th><td>得点</td></tr>
+        <tr><th>🃏</th><td>手札の枚数</td></tr>
+        <tr><th>🏅</th><td>バッジの数</td></tr>
+        <tr><th>🛤</th><td>ジムとジムをつなぐ道の長さ</td></tr>
+        <tr><th>最長／王者</th><td>最長の道／チャンピオンを持っている人</td></tr>
+        <tr><th>?</th><td>遊び方・進行スピード・効果音・BGM の設定</td></tr>
+        <tr><th>↻</th><td>新しいゲームを始める（いまのゲームは破棄）</td></tr>
+        <tr><th>🔊　🎵</th><td>効果音／BGM のオン・オフ</td></tr>
+        <tr><th>⌂</th><td>タイトルに戻る</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 12 -->
+  <section class="sec" id="faq">
+    <h2><span class="no">12</span>こまったときは</h2>
+    <h4>ボタンがうすくて押せない</h4>
+    <p>建設・進化・交換は、自分の番でサイコロを振ったあとだけできます。それでもうすいときは、資源が足りないか、置ける場所がありません（「進化」は、すでに進化済みのときも押せません）。</p>
+    <h4>CPUの動きが速くて、何が起きたかわからない</h4>
+    <p>右上の <span class="k s">?</span> →「進行スピード」を <span class="k s">ゆっくり</span> にします。画面下の出来事の欄をタップすると、これまでの出来事を読み返せます。</p>
+    <h4>途中でやめたい・続きから遊びたい</h4>
+    <p>右上の <span class="k s">⌂</span> でタイトルに戻ります。「CPUと対戦」なら、タイトルの <span class="k">▶ 続きから</span> で再開できます。</p>
+    <h4>最初からやり直したい</h4>
+    <p>右上の <span class="k s">↻</span> をタップします（いまのゲームは破棄されます）。</p>
+    <h4>音を消したい</h4>
+    <p>右上の <span class="k s">🔊</span>（効果音）と <span class="k s">🎵</span>（BGM）で、それぞれオン・オフできます。</p>
+    <h4>フレンドと遊びたい</h4>
+    <p>タイトルの <span class="k s">👥 フレンド対戦（オンライン）</span> から、ニックネームを入れて <span class="k">部屋を作ってフレンドを招待</span> をタップします。出てきた部屋コード（5文字）か招待リンクをフレンドに送り、フレンドはコードを入れて <span class="k s">参加する</span>。そろったら、部屋を作った人が <span class="k">ゲーム開始</span> をタップします。ルールと操作は「CPUと対戦」と同じです。</p>
+  </section>
+
+  <div class="sec">
+    <a class="tbtn pri" href="./index.html">🏝️ ゲームを始める<span>タイトル画面へ</span></a>
+    <p style="text-align:center"><a class="tlink" href="#toc">目次へ戻る</a></p>
+  </div>
+</main>
+
+<script type="module" src="/src/tutorial/main.ts"></script>
+</body>
+</html>

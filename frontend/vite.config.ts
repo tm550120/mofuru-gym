@@ -29,9 +29,10 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     rollupOptions: {
-      // ゲーム本体と管理ページ（admin.html。ゲーム画面からはリンクしない）
+      // ゲーム本体、チュートリアル（tutorial.html。タイトルと「遊び方」からリンク）、管理ページ（admin.html。ゲーム画面からはリンクしない）
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        tutorial: fileURLToPath(new URL('./tutorial.html', import.meta.url)),
         admin: fileURLToPath(new URL('./admin.html', import.meta.url)),
       },
     },

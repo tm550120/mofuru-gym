@@ -111,7 +111,7 @@ export function render(): void {
   $('#log').innerHTML = G.log.slice(0, 2).map(l => `<div>${esc(l)}</div>`).join('');
   toastNew();
   document.querySelectorAll<HTMLButtonElement>('.ab').forEach(b => { const a = b.dataset.act as keyof typeof ok; b.disabled = !ok[a]; b.classList.toggle('on', ui.mode === a && G.phase === 'main'); });
-  $('#newBtn').hidden = MODE === 'guest';
+  $('#newBtn').hidden = MODE === 'guest' || MODE === 'tutorial';
   $('#roomTag').hidden = !online; if (online) $('#roomTag').textContent = '部屋 ' + Net.code();
   renderOffer(); renderDiscard();
   const m = $<HTMLButtonElement>('#main');

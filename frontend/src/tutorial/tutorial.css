@@ -1,0 +1,138 @@
+/* チュートリアルだけのスタイル（色・フォント・部品はゲームの style.css を流用） */
+/* ゲーム画面は1画面に固定（スクロールなし・文字選択なし）なので、読み物のページ用に戻す */
+html.tut{height:auto;padding-top:0;scroll-behavior:smooth;scroll-padding-top:calc(58px + env(safe-area-inset-top,0px))}
+html.tut body{height:auto;overflow:visible;user-select:text;-webkit-user-select:text;font-size:15px;font-weight:500;line-height:1.8;overflow-wrap:anywhere}
+@media (prefers-reduced-motion:reduce){html.tut{scroll-behavior:auto}}
+.tut a{color:inherit}
+.tut a:focus-visible{outline:3px solid #f2b640;outline-offset:2px}
+
+/* 上に固定する移動バー */
+.tnav{position:sticky;top:0;z-index:5;padding-top:env(safe-area-inset-top,0px);background:color-mix(in srgb,var(--page) 90%,transparent);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.tnav div{display:flex;align-items:center;gap:6px;max-width:640px;margin:0 auto;padding:8px 12px}
+.tnav a{padding:5px 12px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-weight:800;font-size:13px;text-decoration:none;white-space:nowrap}
+.tnav a.pri{background:var(--btn);color:var(--btnInk);border-color:var(--btn)}
+.tnav .sp{flex:1}
+
+.twrap{max-width:640px;margin:0 auto;padding:0 16px calc(40px + env(safe-area-inset-bottom,0px))}
+.thero{text-align:center;padding:18px 16px 4px;background:radial-gradient(closest-side at 50% 42%,color-mix(in srgb,var(--sea) 28%,var(--page)) 0,var(--page) 100%)}
+.thero .hmon svg{width:84px;height:84px;display:block;margin:0 auto}
+.thero .ttl{font-size:32px}
+.thero .tsub{margin-bottom:14px}
+a.tbtn{line-height:1.5}
+
+/* 目次 */
+.toc{list-style:none;padding:0;margin:0;counter-reset:toc}
+.toc>li{counter-increment:toc;border-bottom:1px solid var(--line)}
+.toc>li:last-child{border-bottom:0}
+.toc>li>a{display:flex;align-items:center;gap:10px;padding:9px 2px;font-weight:800;text-decoration:none;line-height:1.4}
+.toc>li>a::before{content:counter(toc);flex:none;width:24px;height:24px;border-radius:50%;background:var(--sea);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center}
+.toc>li>a small{display:block;font-weight:500;color:var(--sub);font-size:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px 34px;padding:0;list-style:none}
+.chips a{display:block;padding:4px 10px;border-radius:999px;background:var(--soft);border:1px solid var(--line);font-size:12px;font-weight:800;text-decoration:none}
+
+/* 章 */
+.sec{margin-top:34px}
+.sec h2{display:flex;align-items:center;gap:8px;font-size:21px;font-weight:800;line-height:1.35;margin:0 0 10px}
+.sec h2 .no{flex:none;min-width:30px;height:30px;padding:0 6px;border-radius:15px;background:var(--sea);color:#fff;font-size:15px;display:flex;align-items:center;justify-content:center}
+.sec h3{font-size:16px;font-weight:800;line-height:1.4;margin:22px 0 6px;padding-left:10px;border-left:5px solid var(--sea)}
+.sec h4{font-size:15px;font-weight:800;margin:14px 0 4px}
+.sec p{margin:8px 0}
+.sec ul{padding-left:20px;margin:8px 0}
+.sec li{margin:3px 0}
+.lead{color:var(--sub);font-size:14px}
+.nw{white-space:nowrap}
+
+/* 手順（番号つき） */
+.steps{list-style:none;padding:0;margin:10px 0;counter-reset:st}
+.steps>li{counter-increment:st;position:relative;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:11px 12px 11px 46px;margin:0 0 8px}
+.steps>li::before{content:counter(st);position:absolute;left:11px;top:11px;width:26px;height:26px;border-radius:50%;background:var(--btn);color:var(--btnInk);font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center}
+.steps>li>b:first-child{display:block}
+.steps ul{margin:4px 0}
+.steps .fig{margin:8px 0 2px -34px;background:var(--page)}
+/* 早見表の短い手順 */
+.mini{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px 12px 8px 36px;margin:10px 0;font-weight:700}
+.mini li{margin:2px 0;padding-left:2px}
+.mini li::marker{font-weight:800}
+
+/* 画面に出る文言：ボタン（.k）・小さいボタンや選択肢（.k.s）・メッセージ欄（.say） */
+.k,.say{display:inline-block;max-width:100%;border-radius:8px;padding:0 8px;font-size:.9em;line-height:1.65;vertical-align:baseline}
+.k{background:var(--btn);color:var(--btnInk);font-weight:800;white-space:nowrap}
+.k.s{background:var(--soft);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.say{background:var(--sea);color:#fff;font-weight:700}
+
+/* コツ・注意 */
+.tip,.warn{background:var(--soft);border-radius:12px;border-left:5px solid #f2b640;padding:9px 12px;margin:10px 0;font-size:14px;line-height:1.7}
+.warn{border-left-color:#c3302a}
+.tip>b:first-child,.warn>b:first-child{display:block}
+.tip ul,.warn ul{margin:2px 0}
+
+/* 図 */
+.fig{margin:10px 0;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px;color:var(--ink)}
+.fig .bd svg{width:100%;height:auto;display:block;border-radius:10px}
+.fig .bd.zoom svg{background:var(--sea)}
+.fig figcaption{font-size:13px;color:var(--sub);line-height:1.6;margin-top:6px}
+.fig .ring{max-width:320px;margin:0 auto}
+.fig .ring svg{width:100%;height:auto;display:block}
+.hs svg{width:22px;height:20px;vertical-align:-4px}
+.mi svg{width:34px;height:34px;display:block}
+
+/* 表 */
+.tb{width:100%;border-collapse:separate;border-spacing:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:14px;line-height:1.5;margin:10px 0}
+.tb th,.tb td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.tb thead th{background:var(--soft);font-size:12px;color:var(--sub)}
+.tb tbody th{font-weight:800;white-space:nowrap}
+.tb tr:last-child>*{border-bottom:0}
+.tb .c{text-align:center}
+.tb .em{font-size:17px;letter-spacing:.04em;white-space:nowrap}
+.tb small{color:var(--sub);display:block;font-size:12px}
+.tb b.pt{white-space:nowrap}
+.pips{color:var(--sub);letter-spacing:.1em;white-space:nowrap}
+.red{color:#c3302a;font-weight:800}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .red{color:#ff8a7a}}
+:root[data-theme="dark"] .red{color:#ff8a7a}
+
+/* ゲームの流れ */
+.flow{list-style:none;padding:0;margin:10px 0;display:grid;gap:6px}
+.flow li{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-weight:800;margin:0;position:relative}
+.flow li small{display:block;font-weight:500;color:var(--sub);font-size:13px}
+.flow li+li::before{content:"▼";position:absolute;top:-13px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--sub)}
+.flow li.loop{border-style:dashed;background:var(--soft)}
+
+/* 画面の見かた：ゲーム画面の写し（操作はできない） */
+.mock{max-width:360px;margin:0 auto;background:var(--page);border:2px solid var(--line);border-radius:22px;padding:8px 0 0;overflow:hidden;line-height:1.5;user-select:none;-webkit-user-select:none}
+.mk{position:relative}
+.mk::before{content:attr(data-n);position:absolute;left:1px;top:-3px;z-index:2;width:20px;height:20px;border-radius:50%;background:#f2b640;color:#22302f;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #fff}
+.m-head{display:flex;align-items:center;gap:5px;padding:4px 10px 4px 24px}
+.m-head b{flex:1;min-width:0;font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m-head .icon-btn{flex:none;width:28px;height:28px;font-size:13px;display:flex;align-items:center;justify-content:center}
+.m-players{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:4px 10px}
+.m-players .pl{padding:4px 5px;min-width:0;gap:3px}
+.m-players .pl svg{width:24px;height:24px}
+.m-players .ps{gap:2px 4px}
+@media (max-width:359px){.m-players .pl svg{display:none}.m-res .rc{font-size:8.5px}}
+.m-msg{margin:4px 10px 0;padding:6px 10px 6px 24px;border-radius:12px;background:var(--sea);color:#fff;font-weight:700;font-size:13px}
+.m-board{padding:4px 8px}
+.m-board svg{width:100%;height:auto;display:block}
+.m-panel{background:var(--panel);border-radius:18px 18px 0 0;padding:10px 10px 12px;border-top:1px solid var(--line)}
+.m-row1{display:flex;gap:5px;align-items:stretch}
+.m-dice{display:flex;align-items:center;justify-content:center;font-size:26px;line-height:1;min-width:58px;background:var(--soft);border-radius:12px;padding:0 4px}
+.m-dice small{font-size:11px;font-weight:800;margin-left:3px}
+.m-mymon{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:46px;background:var(--soft);border-radius:12px;padding:2px 4px;font-size:9px;font-weight:700;color:var(--sub)}
+.m-mymon svg{width:30px;height:30px}
+.m-res{flex:1;display:grid;grid-template-columns:repeat(5,1fr);gap:3px}
+.m-log{font-size:11px;color:var(--sub);margin:6px 2px 5px 28px;line-height:1.45}
+.m-log div:first-child{color:var(--ink);font-weight:700}
+.m-main{margin-top:6px;padding:10px;border-radius:14px;background:var(--btn);color:var(--btnInk);font-weight:800;font-size:15px;text-align:center}
+.ab{text-align:center}
+.ab.off{opacity:.38}
+.mklist{list-style:none;padding:0;margin:10px 0 0;counter-reset:mk}
+.mklist li{counter-increment:mk;position:relative;padding:5px 0 5px 30px;margin:0;border-bottom:1px solid var(--line);font-size:14px;line-height:1.65}
+.mklist li:last-child{border-bottom:0}
+.mklist li::before{content:counter(mk);position:absolute;left:0;top:8px;width:20px;height:20px;border-radius:50%;background:#f2b640;color:#22302f;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center}
+
+/* バトル画面の写し */
+.m-battle{max-width:360px;margin:0 auto;text-align:center;line-height:1.5}
+.m-battle h4{margin:0 0 8px;font-size:17px}
+.m-battle .res{font-weight:800;font-size:14px;margin:10px 0 2px}
+.calc{background:var(--soft);border-radius:12px;padding:10px 12px;margin:10px 0;font-weight:800;text-align:center;line-height:1.7}
+.calc small{display:block;font-weight:500;color:var(--sub);font-size:13px}

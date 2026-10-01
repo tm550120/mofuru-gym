@@ -2,35 +2,16 @@
 import { doAction, myTurn } from '../app/session';
 import { app } from '../app/state';
 import { winProb } from '../game/battle';
-import { COLORS, ICON, PIPS, TILE } from '../game/constants';
+import { COLORS } from '../game/constants';
 import { afford, canRoad, canSettle, citySpots, enemyGyms, roadSpots, settleSpots } from '../game/rules';
-import { house } from './art';
+import { islandSVG } from './art';
 import { battleUI } from './battle';
 import { $ } from './dom';
 import { ui } from './local';
 
 export function renderBoard(): void {
   const G = app.G!, ME = app.me;
-  let s = '';
-  const R = 246, sea = [...Array(6)].map((_, i) => `${R * Math.cos(Math.PI / 3 * i)},${R * Math.sin(Math.PI / 3 * i)}`).join(' ');
-  s += `<polygon points="${sea}" fill="var(--sea)" stroke="#f3e2b8" stroke-width="3" stroke-linejoin="round"/>`;
-  G.hexes.forEach(h => {
-    const pts = h.verts.map(v => `${G.V[v].x},${G.V[v].y}`).join(' ');
-    s += `<polygon points="${pts}" fill="${TILE[h.type]}" stroke="#f3e2b8" stroke-width="3" stroke-linejoin="round"/>`;
-    s += `<text x="${h.x}" y="${h.y - 22}" font-size="17" text-anchor="middle" dominant-baseline="central">${ICON[h.type]}</text>`;
-    if (h.num) {
-      const red = h.num === 6 || h.num === 8;
-      s += `<circle cx="${h.x}" cy="${h.y + 6}" r="15" fill="#fbf3de" stroke="rgba(0,0,0,.25)"/>`;
-      s += `<text x="${h.x}" y="${h.y + 4}" font-size="${red ? 15 : 14}" font-weight="800" text-anchor="middle" dominant-baseline="central" fill="${red ? '#c3302a' : '#2a2a2a'}">${h.num}</text>`;
-      const n = PIPS[h.num]; for (let i = 0; i < n; i++) s += `<circle cx="${h.x + (i - (n - 1) / 2) * 3.4}" cy="${h.y + 15}" r="1.2" fill="${red ? '#c3302a' : '#2a2a2a'}"/>`;
-    }
-  });
-  G.E.forEach(e => {
-    if (e.owner === null) return; const a = G.V[e.a], b = G.V[e.b];
-    s += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="rgba(0,0,0,.35)" stroke-width="10" stroke-linecap="round"/>`;
-    s += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${COLORS[e.owner]}" stroke-width="6.5" stroke-linecap="round"/>`;
-  });
-  G.V.forEach(v => { if (v.owner !== null) s += house(v.x, v.y, COLORS[v.owner], v.city); });
+  let s = islandSVG(G);
   if (battleUI.open) { const v = G.V[battleUI.open.v]; s += `<circle cx="${v.x}" cy="${v.y}" r="17" fill="none" stroke="#f2b640" stroke-width="4"/>`; }
   if (myTurn()) {
     const setup = G.phase === 'setup', main = G.phase === 'main';

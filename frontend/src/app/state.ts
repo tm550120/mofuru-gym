@@ -1,6 +1,7 @@
 import type { GameState } from '../game/types';
 
-export type Mode = 'cpu' | 'host' | 'guest';
+/** tutorial: ガイド付きチュートリアル（この端末だけで進み、保存しない） */
+export type Mode = 'cpu' | 'host' | 'guest' | 'tutorial';
 
 /** アプリ全体の状態。G は共有されるゲーム状態（JSON化してオンライン同期する）。それ以外はこの端末だけの状態 */
 export const app: {

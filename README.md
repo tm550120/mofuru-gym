@@ -4,6 +4,10 @@
 
 **遊ぶ：** https://tm550120.github.io/mofuru-gym/
 
+**はじめての人へ（チュートリアル）：** タイトルの「📖 はじめての人へ」を押すと、本物のゲーム画面で案内（吹き出し）どおりにタップしながら、初期配置・建設・進化・交換・7とジムバトルまでをひととおり練習できます（島・サイコロの目・CPU の動きは練習用に固定。保存データや設定は変わりません）。
+
+**勝ち方・早見表（読み物）：** https://tm550120.github.io/mofuru-gym/tutorial.html （操作の手順・勝ち方のコツ・早見表。タイトルの「勝ち方・早見表」、チュートリアルのしめくくり、「?」の遊び方からも開けます）
+
 ## 遊び方（モード）
 
 URL を開くとタイトル画面が出るので、モードを選びます。ゲーム中は右上の「⌂」でタイトルに戻れます。
@@ -68,6 +72,8 @@ npm workspaces のモノレポです。
 | --- | --- |
 | `frontend/` | ゲーム本体（Vite + TypeScript）。GitHub Pages に置くのはこのビルド結果 `frontend/dist` |
 | `frontend/index.html` | 画面の HTML |
+| `frontend/src/tutorial/script.ts`・`guide.ts` | ガイド付きチュートリアル（タイトルの「📖 はじめての人へ」）。`script.ts` は台本（島・サイコロの目・CPU の行動の固定と、案内する手順。DOM に依存しない）、`guide.ts` は吹き出し・スポットライトと、台本にない操作の無効化。ルール処理は持たず、`app/session.ts` の差し替え口（`setDirector`、`app.mode === 'tutorial'` のときだけ有効・保存しない）から本物の進行に注入する。台本が本物のルールで最後まで通ることは `script.test.ts` で確認 |
+| `frontend/tutorial.html`・`frontend/src/tutorial/main.ts`・`scenes.ts` | 読み物ページ（勝ち方・早見表・操作の手順）。文章は `tutorial.html`、図は `scenes.ts` がゲームと同じルール・絵で描く。冒頭の「実際に操作して覚える」（`index.html?guide=1`）でガイド付きチュートリアルが始まる。タイトル・しめくくり・「?」の遊び方からリンク |
 | `frontend/admin.html`・`frontend/src/admin/` | 管理ページ（試験機能の切り替え・テスト） |
 | `frontend/src/style.css` | スタイル |
 | `frontend/src/game/` | ルール・状態・型（盤面生成、資源、建設、進化、バトル、得点、最長の道）。DOM に依存しない |
