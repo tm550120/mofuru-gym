@@ -87,6 +87,7 @@
 
 <div class="sheet-bg" id="helpBg"><div class="sheet">
   <h2>遊び方</h2>
+  <p class="hlink"><a href="./tutorial.html" target="_blank" rel="noopener">📖 チュートリアル（別のタブで開きます）</a></p>
   <ul>
     <li>サイコロの合計と同じ数字の土地に接するジムは資源を1枚、都市は2枚もらえます。</li>
     <li>資源で道・ジム（開拓地）・都市を建てます。ジムは他の建物から2辺以上離し、自分の道につなげます。</li>
@@ -123,6 +124,28 @@
   <div class="row" id="dlgBtns"></div>
 </div></div>
 
+<!-- ガイド付きチュートリアルの案内（src/tutorial/guide.ts）。台本は src/tutorial/script.ts -->
+<div id="guide" hidden>
+  <div id="gRing" hidden></div>
+  <div id="gBubble" role="status" aria-live="polite">
+    <div class="gh"><b id="gCh"></b><span id="gTitle"></span><button id="gQuit">やめる</button></div>
+    <p id="gText"></p>
+    <div class="gf"><span id="gHint"></span><button class="pri" id="gNext">次へ</button></div>
+  </div>
+</div>
+<div class="sheet-bg" id="gEnd"><div class="sheet" style="text-align:center">
+  <div class="big">🎉</div><h2>チュートリアル完了！</h2>
+  <p>初期配置・建設・進化・交換・ジムバトルを、ひととおり体験しました。</p>
+  <ul class="gsum">
+    <li><b>勝利条件</b>先に ★10点 を取った人の勝ち</li>
+    <li><b>得点</b>ジム 1点／都市 2点／最長の道 +2点／チャンピオン（バッジ3個）+2点</li>
+    <li id="gEndNow"></li>
+  </ul>
+  <a class="tbtn" id="gCheat" href="./tutorial.html#win">📋 勝ち方・早見表を見る<span>勝ち方のコツと、遊びながら見返せる早見表</span></a>
+  <button class="tbtn pri" id="gPlay">🤖 ふつうに遊ぶ<span>CPUと対戦</span></button>
+  <button class="tlink" id="gHome">タイトルに戻る</button>
+</div></div>
+
 <div class="screen show" id="title"><div class="tbox">
   <div class="tisle"><svg class="map" id="tMap" viewBox="-130 -118 260 236" aria-hidden="true"></svg><div class="hero" id="tHero"></div></div>
   <div class="tmons" id="tMons"></div>
@@ -136,7 +159,8 @@
     <p class="tnote" id="tNote0"></p>
     <button class="tbtn pri" id="modeCpu">🤖 CPUと対戦<span>あなた＋CPU 2人</span></button>
     <button class="tbtn" id="modeOnline">👥 フレンド対戦（オンライン）<span>2〜3人・部屋コードで招待</span></button>
-    <button class="tlink" id="tHelp">遊び方・ルール</button>
+    <button class="tbtn" id="tTutorial">📖 はじめての人へ<span>実際に操作しながら覚える（チュートリアル）</span></button>
+    <div class="tlinks"><button class="tlink" id="tHelp">遊び方・ルール</button><a class="tlink" id="tCheat" href="./tutorial.html">勝ち方・早見表</a></div>
   </div>
 
   <div id="tCpu" hidden>

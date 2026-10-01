@@ -6,7 +6,7 @@ import {
   advanceTurn, cancelOffer, checkWin, createGame, finishDiscard, finishSetupIfDone, giveInitial, isCpu, log, placeRoad, placeSettlement,
   respondOffer, roll, type CpuDiscard,
 } from '../game/rules';
-import type { Action, GameState, Seat } from '../game/types';
+import type { Action, GameState, Offer, Rng, Seat } from '../game/types';
 import { aiAct, cpuDiscard, cpuLikes, pickBattleTarget, pickSetupRoad, pickSetupSettlement } from '../cpu/ai';
 import { saveCpu, type CpuSave } from './save';
 import { D } from './settings';
@@ -31,10 +31,40 @@ export const hooks = {
 
 export const sleep = (ms: number): Promise<void> => new Promise(r => setTimeout(r, ms));
 
-/** 7のときの CPU の捨て札（その場で選ぶ） */
-const discardNow: CpuDiscard = (g, i, d) => cpuDiscard(g, i, d);
+/**
+ * 乱数と CPU の行動の差し替え口。通常は本物（Math.random と cpu/ai.ts）を使う。
+ * ガイド付きチュートリアル（app.mode === 'tutorial'）のときだけ、setDirector で渡した台本に差し替わる
+ */
+export interface Director {
+  /** サイコロ・バトルの乱数（undefined なら Math.random） */
+  rng: Rng | undefined;
+  pickSetupSettlement: (g: GameState, p: number) => number;
+  pickSetupRoad: (g: GameState, p: number) => number;
+  pickBattleTarget: (g: GameState, p: number) => number | null;
+  aiAct: (g: GameState, p: number) => boolean;
+  cpuLikes: (g: GameState, i: number, o: Offer) => boolean;
+  cpuDiscard: CpuDiscard;
+}
+const realDirector: Director = {
+  rng: undefined,
+  pickSetupSettlement: (g, p) => pickSetupSettlement(g, p),
+  pickSetupRoad: (g, p) => pickSetupRoad(g, p),
+  pickBattleTarget: (g, p) => pickBattleTarget(g, p),
+  aiAct: (g, p) => aiAct(g, p),
+  cpuLikes: (g, i, o) => cpuLikes(g, i, o),
+  cpuDiscard: (g, i, d) => cpuDiscard(g, i, d),
+};
+let scripted: Director | null = null;
+/** チュートリアルの台本を渡す（null で外す）。通常プレイ・オンライン対戦では使われない */
+export function setDirector(d: Director | null): void { scripted = d; }
+const dir = (): Director => (app.mode === 'tutorial' && scripted) || realDirector;
+/** この端末だけで進む対戦（CPU 対戦・チュートリアル） */
+const isSolo = (): boolean => app.mode === 'cpu' || app.mode === 'tutorial';
 
-/** 状態は変更のたびに保存するので、リロードしても盤面・サイコロ・バトル結果は変わらない */
+/** 7のときの CPU の捨て札（その場で選ぶ） */
+const discardNow: CpuDiscard = (g, i, d) => dir().cpuDiscard(g, i, d);
+
+/** 状態は変更のたびに保存するので、リロードしても盤面・サイコロ・バトル結果は変わらない（チュートリアルは保存しない） */
 function saveGame(): void {
   const G = app.G; if (!G) return;
   if (app.mode === 'cpu') saveCpu(G, app.me);
@@ -43,9 +73,9 @@ function saveGame(): void {
 /** 状態を変えたら呼ぶ：保存 → ホストなら全員へ送信 → 描画 → CPUの応答待ちがあれば予約 */
 export function update(): void { saveGame(); if (app.mode === 'host') hooks.broadcast(); hooks.render(); scheduleDuties(); }
 
-/** seats: 席0から順番（色は席番号で決まる）。seq: 手番の順（席番号の配列） */
-export function newGame(seats: Seat[], seq?: number[]): void {
-  app.G = createGame(seats, seq);
+/** seats: 席0から順番（色は席番号で決まる）。seq: 手番の順（席番号の配列）。rng: 島を作る乱数（省略時は Math.random） */
+export function newGame(seats: Seat[], seq?: number[], rng?: Rng): void {
+  app.G = createGame(seats, seq, rng);
   hooks.resetLocalUI();
   void stepSetup();
 }
@@ -61,7 +91,7 @@ export function resumeCpuGame(s: CpuSave): void {
 
 /** 人間プレイヤー（この端末 or リモート）の操作を検証して実行する */
 export function act(p: number, a: Action): boolean {
-  const r = applyAction(app.G, p, a, undefined, discardNow);
+  const r = applyAction(app.G, p, a, dir().rng, discardNow);
   if (!r) return false;
   if (r === 'setup') void stepSetup();
   else if (r === 'turn') startTurn();
@@ -103,11 +133,11 @@ export async function stepSetup(): Promise<void> {
   if (!isCpu(g, p)) { g.busy = false; update(); return; }
   g.busy = true; update(); await sleep(D(1000)); if (app.G !== g) return;
   if (g.setupStep === 'settlement') {
-    const v = pickSetupSettlement(g, p);
+    const v = dir().pickSetupSettlement(g, p);
     placeSettlement(g, v, p); if (g.setupIdx >= n) giveInitial(g, v, p); else log(g, `${g.players[p].name}がジムを置いた`);
     g.setupStep = 'road'; update(); await sleep(D(900)); if (app.G !== g) return;
   }
-  placeRoad(g, pickSetupRoad(g, p), p);
+  placeRoad(g, dir().pickSetupRoad(g, p), p);
   g.setupIdx++; g.setupStep = 'settlement'; void stepSetup();
 }
 /** 今の手番の人が CPU なら CPU の手番を始め、そうでなければ描画する */
@@ -131,7 +161,7 @@ let dutyT: ReturnType<typeof setTimeout> | null = null;
 export function clearDuties(): void { if (dutyT) clearTimeout(dutyT); dutyT = null; }
 export function scheduleDuties(): void {
   const G = app.G;
-  if ((app.mode !== 'cpu' && app.mode !== 'host') || !G || dutyT || G.phase === 'over') return;
+  if ((!isSolo() && app.mode !== 'host') || !G || dutyT || G.phase === 'over') return;
   const disc = G.phase === 'discard' && !!G.discard && Object.keys(G.discard).some(i => isCpu(G, +i));
   const off = !!G.offer && Object.keys(G.offer.resp).some(i => G.offer!.resp[+i] === 'pending' && isCpu(G, +i));
   if (!disc && !off) return;
@@ -140,11 +170,11 @@ export function scheduleDuties(): void {
     dutyT = null; if (app.G !== g) return;
     if (g.phase === 'discard' && g.discard) {
       const dc = g.discard, i = Object.keys(dc).map(Number).find(k => isCpu(g, k));
-      if (i !== undefined) { cpuDiscard(g, i, dc[i]); delete dc[i]; finishDiscard(g); update(); return; }
+      if (i !== undefined) { dir().cpuDiscard(g, i, dc[i]); delete dc[i]; finishDiscard(g); update(); return; }
     }
     if (g.offer) {
       const o = g.offer, i = Object.keys(o.resp).map(Number).find(k => o.resp[k] === 'pending' && isCpu(g, k));
-      if (i !== undefined) { respondOffer(g, i, cpuLikes(g, i, o)); update(); return; }
+      if (i !== undefined) { respondOffer(g, i, dir().cpuLikes(g, i, o)); update(); return; }
     }
     scheduleDuties();
   }, D(1100));
@@ -152,28 +182,28 @@ export function scheduleDuties(): void {
 
 /* CPU の手番でバトル演出の終わりを待つ（オンラインでは他の人を待たせないよう一定時間） */
 function battleWait(): Promise<void> {
-  if (app.mode !== 'cpu') return sleep(D(3000));
+  if (!isSolo()) return sleep(D(3000));
   return hooks.waitBattleClosed();
 }
 
 export async function aiTurn(p: number): Promise<void> {
   const g = app.G; if (!g) return;
   g.busy = true; update(); await sleep(D(1000)); if (app.G !== g || g.cur !== p) return;
-  if (g.phase === 'roll') { roll(g, undefined, discardNow); update(); await sleep(D(1500)); if (app.G !== g) return; }
+  if (g.phase === 'roll') { roll(g, dir().rng, discardNow); update(); await sleep(D(1500)); if (app.G !== g) return; }
   if (g.phase === 'discard') {
     await waitFor(g, () => g.phase !== 'discard'); if (app.G !== g) return;
     await sleep(D(700)); if (app.G !== g) return;
   }
   if (g.phase === 'battle') {
-    const best = pickBattleTarget(g, p);
+    const best = dir().pickBattleTarget(g, p);
     if (best !== null) {
-      battle(g, p, best); g.phase = 'main'; if (checkWin(g)) { update(); return; } update();
+      battle(g, p, best, dir().rng); g.phase = 'main'; if (checkWin(g)) { update(); return; } update();
       await battleWait(); if (app.G !== g) return;
     } else { log(g, `${g.players[p].name}は挑戦を見送った`); g.phase = 'main'; }
     update(); await sleep(D(900)); if (app.G !== g) return;
   }
   for (let i = 0; i < 14; i++) {
-    if (!aiAct(g, p)) break;
+    if (!dir().aiAct(g, p)) break;
     if (checkWin(g)) { update(); return; } update();
     if (g.offer) {
       const id = g.offer.id;
